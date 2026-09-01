@@ -1,336 +1,611 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Persona Finder</title>
-  
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>Nemotron Persona Lab</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --navy:#0f172a; --navy-2:#1e3a8a; --blue:#2563eb; --blue-soft:#eff6ff;
+      --s900:#0f172a; --s800:#1e293b; --s700:#334155; --s600:#475569; --s500:#64748b;
+      --s400:#94a3b8; --s300:#cbd5e1; --s200:#e2e8f0; --s100:#f1f5f9; --s50:#f8fafc;
+      --white:#fff; --danger:#b42318; --danger-bg:#fff1f0; --success:#047857; --success-bg:#ecfdf5;
+      --frame:430px; --ease:cubic-bezier(.22,1,.36,1);
+    }
+    *{box-sizing:border-box} html{background:var(--s50)}
+    body{margin:0;min-height:100vh;min-height:100dvh;background:var(--s50);color:var(--s900);font:16px/1.5 Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+    button,input,textarea{font:inherit}button{border:0;cursor:pointer}button:disabled{cursor:not-allowed;opacity:.42}a{color:inherit}[hidden]{display:none!important}
+    .app-frame{position:relative;width:min(100%,var(--frame));min-height:100vh;min-height:100dvh;margin:auto;overflow:hidden;background:var(--white);box-shadow:0 25px 55px #0f172a24}
+    .screen{min-height:100vh;min-height:100dvh}.fade-in{animation:fade-in .42s var(--ease) both}
+    @keyframes fade-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.spinner{animation:spin 1s linear infinite!important}}
+
+    .api-screen{display:flex;flex-direction:column;justify-content:center;padding:46px 40px calc(42px + env(safe-area-inset-bottom));text-align:center;background:#fff}
+    .hero-icon{display:grid;place-items:center;width:96px;height:96px;margin:0 auto 38px;border-radius:50%;color:#fff;background:var(--blue);box-shadow:0 10px 32px #2563eb61}
+    .hero-icon svg{width:48px;height:48px;stroke-width:2.2}.hero-title{margin:0;color:var(--s900);font-size:clamp(50px,13.5vw,58px);font-weight:900;font-style:italic;line-height:1.07;letter-spacing:-.055em}
+    .hero-subtitle{margin:22px 0 54px;color:var(--s400);font-size:15px;font-weight:600}.api-link{display:inline-block;margin-bottom:28px;color:var(--blue);font-size:18px;font-weight:800;text-underline-offset:5px}
+    .input-wrap{position:relative}.api-input,.text-input,.text-area{width:100%;color:var(--s900);background:#fff;border:2px solid var(--s300);outline:0;transition:.18s}
+    .api-input{height:62px;padding:0 54px 0 18px;border-radius:20px;text-align:center;font-size:18px;font-weight:600}.api-input:focus,.text-input:focus,.text-area:focus{border-color:var(--blue);box-shadow:0 0 0 4px #2563eb1c}
+    .api-input::placeholder,.text-input::placeholder,.text-area::placeholder{color:var(--s400)}.icon-button{display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:14px;color:var(--s500);background:transparent}
+    .input-wrap .icon-button{position:absolute;top:9px;right:7px}.icon-button svg{width:22px;height:22px}.security-note{margin:17px 4px 36px;color:var(--s500);font-size:13px;font-weight:550;line-height:1.6}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:14px 20px;border-radius:18px;font-size:18px;font-weight:800;line-height:1.25;text-decoration:none;transition:.15s}
+    .btn:active:not(:disabled){transform:scale(.98)}.btn svg{width:21px;height:21px}.btn-full{width:100%}.btn-primary{color:#fff;background:var(--navy-2);box-shadow:0 8px 22px #1e3a8a2e}.btn-primary:hover:not(:disabled){background:#1d4ed8}
+    .btn-dark{color:#fff;background:var(--navy);box-shadow:0 10px 28px #0f172a29}.btn-outline{color:var(--s900);background:#fff;border:2px solid var(--s200)}.btn-outline:hover:not(:disabled){border-color:var(--s300);background:var(--s50)}
+    .message{margin-top:16px;padding:13px 15px;border-radius:14px;text-align:left;font-size:14px;font-weight:650;line-height:1.5}.message-error{color:var(--danger);background:var(--danger-bg);border:1px solid #ffd5d2}.message-success{color:var(--success);background:var(--success-bg);border:1px solid #bbf7d0}
+
+    .app-header{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;min-height:84px;padding:max(12px,env(safe-area-inset-top)) 14px 10px;color:#fff;background:#0f172afa;backdrop-filter:blur(16px)}
+    .header-button{color:#fff;background:#ffffff14}.header-button:disabled{opacity:.28}.header-title{min-width:0;text-align:center}.header-title strong{display:block;overflow:hidden;font-size:16px;text-overflow:ellipsis;white-space:nowrap}.header-title small{display:block;margin-bottom:1px;color:#93c5fd;font-size:16px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+    .step-area{padding:20px 16px 0;background:#fff}.step-meta{display:flex;justify-content:space-between;color:var(--blue);font-size:16px;font-weight:850;letter-spacing:.06em;text-transform:uppercase}.step-area h1{margin:8px 0 16px;font-size:29px;font-weight:900;line-height:1.15;letter-spacing:-.035em}
+    .progress-track{height:4px;overflow:hidden;border-radius:999px;background:var(--s100)}.progress-track i{display:block;height:100%;border-radius:inherit;background:var(--blue);transition:width .35s var(--ease)}
+    .content{padding:18px 16px 128px;background:#fff}.content.no-bottom{padding-bottom:38px}.card{margin:0 0 16px;padding:19px 18px;border:1px solid var(--s100);border-radius:24px;background:#fff;box-shadow:0 8px 24px #0f172a0d}
+    .card-dark{color:#fff;background:var(--navy);border-color:var(--navy);box-shadow:0 18px 40px #0f172a33}.eyebrow{margin-bottom:9px;color:var(--blue);font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}.card-dark .eyebrow{color:#60a5fa}
+    .display-title{margin:0 0 12px;font-size:27px;font-weight:900;line-height:1.18;letter-spacing:-.035em}.body-copy{margin:0;color:var(--s500);font-size:16px;font-weight:560;line-height:1.65}.card-dark .body-copy{color:var(--s300)}
+    .drop-zone{margin-top:21px;padding:30px 18px;border:2px dashed var(--s300);border-radius:25px;text-align:center;background:var(--s50);transition:.18s}.drop-zone.dragging{border-color:var(--blue);background:var(--blue-soft);transform:scale(1.01)}
+    .drop-icon{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 14px;border-radius:18px;color:var(--blue);background:#fff;box-shadow:0 8px 22px #0f172a14}.drop-icon svg{width:28px;height:28px}.drop-zone strong{display:block;margin-bottom:7px;font-size:18px}.drop-zone p{margin:0 0 18px;color:var(--s500);font-size:14px;line-height:1.55}
+    .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}.fact{min-width:0;padding:12px 10px;border-radius:15px;text-align:center;background:var(--blue-soft)}.fact small{display:block;color:var(--s500);font-size:11px;font-weight:750;text-transform:uppercase}.fact strong{display:block;margin-top:4px;overflow:hidden;font-size:15px;text-overflow:ellipsis;white-space:nowrap}
+    .field-label{display:block;margin:20px 0 8px;color:var(--s700);font-size:14px;font-weight:800}.text-input,.text-area{padding:16px 17px;border:1.5px solid var(--s200);border-radius:20px;font-size:17px;font-weight:560;background:var(--s50)}.text-area{min-height:210px;resize:vertical;line-height:1.65}.text-area.compact{min-height:116px}.helper{margin:10px 2px 0;color:var(--s400);font-size:13px;line-height:1.55}
+    .bottom-bar{position:fixed;z-index:30;bottom:0;left:50%;width:min(100%,var(--frame));padding:14px 16px calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);border-top:1px solid var(--s100);background:#fffffff0;backdrop-filter:blur(16px)}.bottom-stack{display:grid;gap:9px}
+
+    .loading-card{padding:30px 20px;text-align:center}.spinner{display:block;width:60px;height:60px;margin:0 auto 24px;border:6px solid var(--s100);border-top-color:var(--blue);border-right-color:#60a5fa;border-radius:50%;transform-origin:50% 50%;will-change:transform;animation:spin .85s linear infinite!important}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .work-progress{position:relative;height:7px;margin:22px 0 11px;overflow:hidden;border-radius:999px;background:var(--s100)}.work-progress i{display:block;height:100%;border-radius:inherit;background:var(--blue);transition:width .35s var(--ease)}.work-progress:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,#ffffffb8,transparent);animation:sweep 1.4s infinite}@keyframes sweep{to{transform:translateX(100%)}}
+    .progress-caption{display:flex;justify-content:space-between;color:var(--s500);font-size:13px;font-weight:700}
+    .analysis-field{margin-top:11px;padding:15px 16px;border-radius:17px;background:var(--s50)}.analysis-field b{display:block;margin-bottom:5px;color:var(--blue);font-size:12px;font-weight:900}.analysis-field span{display:block;color:var(--s700);font-size:15px;font-weight:580;line-height:1.6}.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.chip{padding:7px 10px;border-radius:999px;color:#1d4ed8;background:var(--blue-soft);font-size:13px;font-weight:750}
+    .results-intro{margin-bottom:28px}.results-intro h2{margin:0 0 8px;font-size:30px;font-weight:900;line-height:1.15;letter-spacing:-.04em}.results-intro p{margin:0;color:var(--blue);font-size:17px;font-weight:800;line-height:1.55}
+    .result-card{position:relative;padding:30px 0;border-bottom:1px solid var(--s100)}.result-card:last-child{border-bottom:0}.rank-badge{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:30px;padding:0 11px;border-radius:999px;color:#fff;background:var(--blue);font-size:13px;font-weight:900}.score{position:absolute;top:28px;right:0;color:var(--blue);font-size:28px;font-weight:900;letter-spacing:-.04em}.score small{color:var(--s400);font-size:12px;font-weight:700}.persona-title{margin:15px 70px 6px 0;font-size:23px;font-weight:900;line-height:1.25;letter-spacing:-.025em}.persona-meta{margin:0;color:var(--s500);font-size:14px;font-weight:620;line-height:1.6}
+    .reason-box{margin-top:20px;padding:18px;border-radius:19px;color:var(--s600);background:var(--s50);font-size:16px;font-weight:570;line-height:1.72}.reason-section+.reason-section{margin-top:18px;padding-top:18px;border-top:1px solid var(--s200)}.reason-title{display:flex;align-items:center;gap:8px;margin-bottom:7px;color:var(--s900);font-size:17px;font-weight:900}.reason-title svg{width:19px;height:19px;color:var(--blue)}.evidence{margin-top:10px;padding:14px 15px;border-left:4px solid var(--blue);border-radius:0 14px 14px 0;background:var(--blue-soft);color:var(--s600);font-size:16px;line-height:1.62}.evidence b{display:block;margin-bottom:4px;color:var(--blue);font-size:16px;font-weight:900}
+    details{margin-top:14px;color:var(--s600);font-size:14px}summary{cursor:pointer;color:var(--s800);font-weight:800}details p{margin:10px 0 0;line-height:1.6}
+    .modal-backdrop{position:fixed;z-index:100;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-top:40px;background:#0f172a9e}.modal-sheet{width:min(100%,var(--frame));max-height:88vh;overflow:auto;padding:22px 24px calc(30px + env(safe-area-inset-bottom));border-radius:30px 30px 0 0;background:#fff;animation:sheet-up .32s var(--ease) both}@keyframes sheet-up{from{transform:translateY(30px);opacity:.65}}
+    .modal-head{position:sticky;top:-22px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:-22px -24px 16px;padding:20px 24px 14px;border-bottom:1px solid var(--s100);background:#fffffff5;backdrop-filter:blur(12px)}.modal-head h2{margin:0;font-size:22px}.raw-field{margin-top:9px;padding:13px 15px;border-radius:15px;background:var(--s50)}.raw-field b{display:block;margin-bottom:4px;color:var(--blue);font-size:11px;font-weight:900}.raw-field span{display:block;color:var(--s700);font-size:14px;line-height:1.55;word-break:break-word}
+    .done-screen{display:flex;min-height:calc(100dvh - 76px);flex-direction:column;justify-content:center;padding:36px 24px 132px;text-align:center}.done-mark{display:grid;place-items:center;width:86px;height:86px;margin:0 auto 28px;border-radius:50%;color:#fff;background:var(--blue);box-shadow:0 10px 30px #2563eb4d}.done-mark svg{width:42px;height:42px;stroke-width:2.5}.done-screen h1{margin:0 0 12px;font-size:34px;font-weight:900;letter-spacing:-.04em}.done-screen p{margin:0;color:var(--s500);font-size:16px;line-height:1.65}
+    .toast{position:fixed;z-index:200;top:calc(18px + env(safe-area-inset-top));left:50%;width:min(calc(100% - 32px),398px);padding:14px 17px;transform:translateX(-50%);border-radius:15px;color:#fff;background:var(--s900);box-shadow:0 15px 35px #0f172a40;font-size:16px;font-weight:750;text-align:center;animation:toast-in .25s var(--ease) both}@keyframes toast-in{from{opacity:0;transform:translate(-50%,-10px)}}
+    .hero-subtitle,.security-note,.message,.eyebrow,.drop-zone p,.fact small,.fact strong,.field-label,.helper,.progress-caption,.loading-step,.analysis-field b,.analysis-field span,.chip,.rank-badge,.score small,.persona-meta,details,.raw-field b,.raw-field span{font-size:16px}
+    .analysis-field{padding:14px}.rank-badge{height:34px}.persona-title{margin-right:76px}.modal-sheet{padding-left:16px;padding-right:16px}.modal-head{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+    .section-heading{margin:0 0 10px;font-size:30px;font-weight:900;line-height:1.18;letter-spacing:-.035em}.section-lead{margin:0 0 24px;color:var(--blue);font-size:17px;font-weight:800;line-height:1.6}
+    .select-list,.question-list,.interview-list{display:grid;gap:12px}.select-card,.question-card,.session-card{width:100%;padding:18px;border:2px solid var(--s100);border-radius:22px;text-align:left;color:var(--s900);background:#fff;transition:.16s}.select-card:hover,.question-card:hover{border-color:var(--s300)}.select-card.selected,.question-card.selected{border-color:var(--blue);background:var(--blue-soft);box-shadow:0 8px 22px #2563eb1c}.select-card h3{margin:0 0 7px;font-size:21px;font-weight:900}.select-card p{margin:0;color:var(--s600);font-size:16px;line-height:1.6}.select-card-feature{margin-top:12px!important;padding-top:12px;border-top:1px solid var(--s100);color:var(--s700)!important}.select-card-feature b{display:block;margin-bottom:4px;color:var(--blue);font-size:16px}.select-card-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.status-chip{display:inline-flex;align-items:center;min-height:32px;padding:5px 10px;border-radius:999px;color:#1d4ed8;background:#dbeafe;font-size:16px;font-weight:800}
+    .criteria-box{margin-top:20px;padding:18px;border:1px solid #dbeafe;border-radius:20px;text-align:left;background:var(--blue-soft)}.criteria-box h3{margin:0 0 8px;color:var(--blue);font-size:18px;font-weight:900}.criteria-box p{margin:0 0 10px;color:var(--s600);font-size:16px;line-height:1.55}.criteria-list{margin:0;padding-left:22px;color:var(--s700);font-size:16px;line-height:1.7}.criteria-list li+li{margin-top:3px}
+    .saved-project-button{margin-top:14px}.saved-count{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:999px;color:#fff;background:var(--blue);font-size:16px;font-weight:900}.reconnect-box{margin:0 0 16px;padding:18px;border:2px solid #93c5fd;border-radius:22px;background:var(--blue-soft)}.reconnect-box h3{margin:0 0 7px;color:var(--blue);font-size:20px;font-weight:900}.reconnect-box p{margin:0;color:var(--s600);font-size:16px;line-height:1.6}.reconnect-file{display:block;margin:12px 0;padding:11px 13px;border-radius:14px;color:var(--s900);background:#fff;font-size:16px;word-break:break-all}.project-list{display:grid;gap:12px}.project-empty{padding:32px 14px;text-align:center;color:var(--s500);font-size:16px;line-height:1.65}.project-item{display:grid;grid-template-columns:1fr 50px;gap:8px;padding:8px;border:1px solid var(--s200);border-radius:20px;background:#fff}.project-open{min-width:0;padding:10px;text-align:left;color:var(--s900);background:transparent}.project-open h3{margin:0 0 6px;overflow:hidden;font-size:19px;font-weight:900;text-overflow:ellipsis;white-space:nowrap}.project-open p{margin:0;color:var(--s500);font-size:16px;line-height:1.55;word-break:break-word}.project-stage{display:inline-flex;margin-top:9px;padding:5px 9px;border-radius:999px;color:#1d4ed8;background:var(--blue-soft);font-size:16px;font-weight:800}.project-delete{display:grid;place-items:center;align-self:center;width:46px;height:46px;border-radius:15px;color:var(--danger);background:var(--danger-bg)}.project-delete svg{width:22px;height:22px}
+    .question-toolbar{display:flex;gap:9px;margin:0 0 18px}.question-toolbar .btn{min-height:44px;padding:9px 14px;font-size:16px}.question-group{margin-bottom:28px}.question-group h3{display:flex;align-items:center;gap:9px;margin:0 0 12px;font-size:20px;font-weight:900}.question-group h3:before{content:"";width:7px;height:24px;border-radius:99px;background:var(--blue)}.question-card{display:flex;align-items:flex-start;gap:12px;font-size:16px;font-weight:720;line-height:1.55}.check-dot{display:grid;place-items:center;width:26px;height:26px;flex:0 0 26px;margin-top:1px;border:2px solid var(--s300);border-radius:50%;color:#fff}.question-card.selected .check-dot{border-color:var(--blue);background:var(--blue)}.manual-box{margin-top:24px;padding:18px;border-radius:22px;background:var(--s50);border:1px solid var(--s100)}
+    .interview-hero{padding:22px;border-radius:24px;color:#fff;background:var(--navy);box-shadow:0 14px 30px #0f172a22}.interview-hero h2{margin:0 0 10px;font-size:25px;font-weight:900}.interview-hero p{margin:0;color:var(--s300);font-size:16px;line-height:1.65}.session-nav{display:flex;gap:8px;margin:18px 0;overflow-x:auto;padding-bottom:4px}.session-nav button{min-width:max-content;padding:9px 12px;border:1px solid var(--s200);border-radius:999px;color:var(--s600);background:#fff;font-size:16px;font-weight:800}.session-nav button.active{color:#fff;background:var(--blue);border-color:var(--blue)}.qa-card{padding:20px 0;border-bottom:1px solid var(--s100)}.qa-card:last-child{border-bottom:0}.qa-label{display:block;margin-bottom:7px;color:var(--blue);font-size:16px;font-weight:900}.qa-question{margin:0 0 14px;color:var(--s900);font-size:18px;font-weight:850;line-height:1.55}.qa-answer{margin:0;color:var(--s600);font-size:17px;line-height:1.75;white-space:pre-line}.insight-box{margin-top:22px;padding:19px;border-radius:22px;color:var(--s800);background:var(--blue-soft);border:1px solid #dbeafe;font-size:17px;font-weight:720;line-height:1.75;white-space:pre-line}.followup-row{display:grid;grid-template-columns:1fr 52px;gap:9px;margin-top:12px}.followup-row .text-input{min-width:0}.followup-row .btn{min-height:52px;padding:0}.interview-actions{display:grid;gap:10px;margin-top:24px}
+    @media(max-width:380px){.api-screen{padding-left:24px;padding-right:24px}.content,.step-area{padding-left:14px;padding-right:14px}.bottom-bar{padding-left:14px;padding-right:14px}.hero-title{font-size:48px}.card{padding:18px 16px}}
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background: #FBFBFD;">
-  <div id="root"></div>
+<body>
+  <div id="app" class="app-frame" aria-live="polite"></div>
+  <div id="modal" hidden></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <noscript>이 프로그램을 사용하려면 브라우저의 JavaScript를 활성화해 주세요.</noscript>
+  <script>
+  (() => {
+    'use strict';
 
-  <script type="text/babel">
-    const { useState } = React;
+    // 기존 프로그램의 API 모델을 변경하지 않고 그대로 사용합니다.
+    const MODEL_NAME = 'gemini-flash-latest';
+    const API_KEY_STORAGE = 'nemotronApiKey';
+    const LOCAL_CANDIDATE_COUNT = 60;
+    const BATCH_SIZE = 20;
+    const FINAL_COUNT = 10;
+    const MAX_FILE_BYTES = 50 * 1024 * 1024;
+    const PROJECT_DB_NAME = 'nemotron-research-lab';
+    const PROJECT_STORE = 'projects';
+    const PROJECT_FALLBACK_KEY = 'nemotronResearchProjectsV1';
+    const HIGH_VALUE_FIELDS = ['페르소나 요약','직업 페르소나','기술 및 전문성','취미 및 관심사','경력 목표','제품 및 서비스','생활 맥락','불편 사항','니즈','Persona Summary','Skills And Expertise List','Hobbies And Interests List','Goals And Aspirations','Products And Services','Pain Points','Needs'];
+    const IDENTITY_FIELDS = ['이름','성명','실명','Persona Name','Full Name','Name','First Name','Last Name','직업','직업 페르소나','Occupation','나이','연령','Age','성별','Gender','시도/주','지역','Location'];
+    const PROMPTS = {
+      analyze: `Analyze this Korean product, UX, service, or design project topic and its optional description.
+Return JSON only with these keys: projectTopic, researchIntent, importantContexts, importantBehaviors,
+personaTypes, productsAndServices, lifeContexts, painPoints, needs, keywords, expandedKeywords,
+bilingualTerms, priorityFields, occupations.
+Interpret a short or vague project name intelligently, but do not invent facts about any Persona.
+All list-like fields must be arrays. Write explanations in Korean.`,
+      evaluate: `Briefly evaluate the supplied Nemotron Personas for their interview value for the supplied project.
+Return a JSON array only. Each item must contain personaId, score (0-100), reason, coreFeatures,
+experiences, interviewPerspective, evidence (an array of objects with field and evidence).
+For reason, write 2-3 concrete Korean sentences explaining project relevance, distinctive context,
+and likely insight value. For interviewPerspective, write 1-2 concrete Korean sentences.
+Use at most 4 coreFeatures, 3 experiences, and 3 evidence items to keep the response compact.
+Prioritize project relevance, evidence richness, need discovery, concept inspiration, and diversity.
+Never invent facts, names, or IDs. Preserve every supplied personaId exactly.
+When evidence is absent, explicitly write "데이터에서 직접 확인되지 않음". Write in Korean.`
+      ,questions: (topic,analysis,persona) => `You are an expert UX interview designer.
+Project topic: ${topic}
+Project analysis: ${JSON.stringify(analysis)}
+Selected Nemotron Persona: ${JSON.stringify(persona)}
+Create exactly 15 in-depth Korean interview questions in 3 categories with exactly 5 questions each.
+Questions must reveal concrete behavior, context, pain points, unmet needs, decision criteria, and concept opportunities.
+Do not ask leading questions and do not invent Persona facts.
+Return JSON only: {"groups":[{"id":"category-1","title":"Category title","questions":["Question 1"]}]}.`,
+      interview: (topic,analysis,persona,questions) => `Act as the supplied Nemotron Persona in a realistic virtual user interview.
+Project topic: ${topic}
+Project analysis: ${JSON.stringify(analysis)}
+Persona original data: ${JSON.stringify(persona)}
+Answer every question in natural conversational Korean while staying consistent with the supplied data.
+For each answer, write about 4-5 sentences and include a concrete daily context or past experience only when it can be reasonably grounded in the Persona data.
+Never invent a name, job, family status, product ownership, or experience absent from the Persona data. Do not use markdown bold.
+Questions: ${questions.map((question,index)=>`${index+1}. ${question}`).join('\n')}
+Return JSON only: {"summary":"Session summary","qaPairs":[{"q":"Question","a":"Answer"}],"keyInsights":["Insight 1","Insight 2","Insight 3"]}.`,
+      followUp: (topic,persona,session,question) => `Continue the same virtual interview as the supplied Nemotron Persona.
+Project topic: ${topic}
+Persona original data: ${JSON.stringify(persona)}
+Previous interview summary: ${session.summary}
+Previous conversation: ${JSON.stringify(session.qaPairs)}
+Follow-up question: ${question}
+Answer in 4-5 natural Korean sentences, remain consistent with previous answers and source data, and do not invent unsupported facts.
+Return JSON only: {"q":"${question}","a":"Answer"}.`
+    };
 
-    // ─── Nemotron-Personas-Korea 핵심 통계 (데이터셋 카드 기반) ───
-    const STATS_CONTEXT = `
-[Nemotron-Personas-Korea 데이터셋 통계 요약]
-- 개요: NVIDIA가 통계청(KOSIS)·대법원·국민건강보험공단·농촌경제연구원 실측 분포로 합성한 100만 레코드(700만 페르소나), 성인(19세+), 17개 시도·252개 시군구.
-- 연령: 항아리형 구조. 50-64세가 최대 코호트(구간별 약 9%). 저출산으로 20대 이하로 갈수록 얇아짐. 80-89세는 여성이 남성의 약 1.52배.
-- 혼인: 19-24세 미혼 95%+. 30대에 미혼 55%→31%로 감소(평균 초혼 31-33세). 유배우 비율은 50대 후반 78%로 정점. 이혼율은 50대~60대 초반 약 12%로 최고(황혼이혼). 사별은 80대 후반 66%.
-- 가구: '부부+미혼자녀'가 최다(19세 기준 63.6%, 40대 중반까지 과반). 1인가구는 20대 초반(15-22%)과 75세 이상(21-32%)의 이중 봉우리. 부부 가구는 65-69세 45.7% 정점. 한부모는 모+자녀(5-14%)가 부+자녀(2-5%)보다 많음.
-- 학력: 20-34세는 4년제 대졸 50%+, 전문대 포함 시 약 75%. 35-54세는 고졸이 최다(31-50%). 80세+는 무학(36%)+초졸(37%)=73%.
-- 지역별 학사 이상 비율: 전국 32.9%, 세종 49.0%(1위), 서울 45.1%, 대전 39.7%, 광주 36.2%, 경기 34.8%.
-- 직업: 전문가·사무직이 최대 비중(지식·서비스 경제). 판매직 1위는 온라인 쇼핑 판매원(판매직의 19.8%). 단순노무는 건물 경비원(21.3%)·청소원(16.0%) 집중. 서비스직은 한식 조리사·시설 경비원, 장치조작은 지게차·화물차 운전원 중심. 군인은 전체의 약 1%.
-- 성씨: 김 21.5%, 이 14.7%, 박 8.5%, 정 4.8%, 최 4.7% (상위 5개=54%).
-    `;
+    const state = {
+      screen: sessionStorage.getItem(API_KEY_STORAGE) ? 'upload' : 'api',
+      rows: [], fields: [], fileName: '', sheetName: '', topic: '', description: '',
+      analysis: null, recommendations: [], candidates: [], busy: false, phase: '',
+      progress: 0, progressText: '', progressCount: '', controller: null, error: '', warning: '',
+      selectedPersonaId: '', questionGroups: [], selectedQuestionIds: [], interviews: [], activeInterviewId: '',
+      projectId: '', projects: [], pendingProject: null, fileHandle: null, fileSize: 0, fileLastModified: 0, candidateCount: 0
+    };
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const textValue = value => {
+      if (value == null || value === '') return '데이터에서 직접 확인되지 않음';
+      if (Array.isArray(value)) return value.map(textValue).join(', ');
+      if (typeof value === 'object') return Object.values(value).map(textValue).join(', ');
+      return String(value);
+    };
+    const normalize = value => textValue(value).normalize('NFKC').replace(/데이터에서 직접 확인되지 않음/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+    const personaId = row => String(row['고유ID'] ?? row['Persona ID'] ?? row.personaId ?? row.__index);
+    const isIdField = field => ['고유id','persona id','personaid','id'].includes(normalize(field));
+    function matchingField(row,candidates){
+      const keys=Object.keys(row||{}).filter(key=>!key.startsWith('__'));
+      for(const candidate of candidates){const target=normalize(candidate),key=keys.find(value=>normalize(value)===target);if(key&&String(row[key]??'').trim())return key}
+      return '';
+    }
+    function personaSummary(row){
+      const field=matchingField(row,['페르소나 요약','Persona Summary','persona_summary','PersonaSummary','페르소나 프로필','Persona Profile']);
+      return field?textValue(row[field]).replace(/\s+/g,' ').trim():'';
+    }
+    function validPersonaName(value,row){
+      const candidate=String(value??'').replace(/^[\s"'“”‘’\[\](){}]+|[\s"'“”‘’\[\](){}.,;:]+$/g,'').replace(/\s+/g,' ').trim();
+      if(!candidate||candidate.length<2||candidate.length>30||candidate.split(' ').length>4)return '';
+      const generic=['페르소나','persona','사용자','고객','이름','성명','남성','여성','무직','직장인','학생','주부','은퇴자','데이터에서 직접 확인되지 않음'];
+      if(generic.includes(candidate.toLowerCase()))return '';
+      const jobField=matchingField(row,['직업','직업 페르소나','Occupation']),job=jobField?String(row[jobField]).trim():'';
+      if(job&&normalize(candidate)===normalize(job))return '';
+      return /^[가-힣·]{2,8}$/.test(candidate)||/^[A-Za-z][A-Za-z .'-]{1,29}$/.test(candidate)?candidate:'';
+    }
+    function nameFromSummary(row){
+      const summary=personaSummary(row);if(!summary)return '';
+      const patterns=[
+        /(?:^|[,{\s])(?:이름|성명|실명|name|full name)\s*["'”’]?\s*(?:은|는|[:：=\-])\s*["'“‘]?([가-힣·]{2,8}?)(?=\s*(?:입니다|이다|이며|이고|은|는|의|씨|님|["'”’),.;:·}\]]|$))/i,
+        /(?:^|[,{\s])(?:이름|성명|실명|name|full name)\s*["'”’]?\s*(?:은|는|[:：=\-])\s*["'“‘]?([A-Z][A-Za-z'-]+(?:\s+[A-Z][A-Za-z'-]+){0,3})(?=\s*(?:["'”’),.;:·}\]]|$))/,
+        /(?:^|[,{\s])(?:페르소나|persona)\s*[:：=\-]\s*["'“‘]?([가-힣·]{2,8}?)(?=\s*(?:입니다|이다|이며|이고|은|는|의|씨|님|["'”’),.;:·}\]]|$))/i,
+        /^\s*[#*\-]*\s*["'“‘]?([가-힣·]{2,8})["'”’]?\s*(?:씨|님)?(?:은|는|의)\s*/,
+        /^\s*[#*\-]*\s*["'“‘]?([가-힣·]{2,8})["'”’]?\s*(?=[(（,·/]\s*(?:만\s*)?\d{1,3}\s*세)/
+      ];
+      for(const pattern of patterns){const match=summary.match(pattern),name=validPersonaName(match?.[1],row);if(name)return name}
+      return '';
+    }
+    function personaName(row){
+      const directField=matchingField(row,['이름','성명','실명','Persona Name','Full Name','name','full_name','persona_name']);
+      if(directField){const direct=validPersonaName(row[directField],row);if(direct)return direct}
+      const firstField=matchingField(row,['First Name','first_name','이름(First Name)']),lastField=matchingField(row,['Last Name','last_name','성(Last Name)']);
+      const combined=[firstField?row[firstField]:'',lastField?row[lastField]:''].map(value=>String(value??'').trim()).filter(Boolean).join(' ');
+      if(validPersonaName(combined,row))return combined;
+      return nameFromSummary(row)||'이름 확인 필요';
+    }
+    function personaFeature(row){
+      const summary=personaSummary(row),evaluation=row?.evaluation||{},fallbacks=[summary,...arrayValue(evaluation.coreFeatures),...arrayValue(evaluation.experiences),evaluation.reason];
+      let feature=fallbacks.map(value=>String(value??'').replace(/\s+/g,' ').trim()).find(value=>value&&value!=='데이터에서 직접 확인되지 않음');
+      if(!feature){const jobField=matchingField(row,['직업','직업 페르소나','Occupation']),job=jobField?String(row[jobField]).trim():'사용자';feature=`${job||'사용자'}의 생활 맥락과 과제 관련 경험을 인터뷰에서 확인할 수 있습니다.`}
+      return feature.length>170?`${feature.slice(0,167).trim()}…`:feature;
+    }
+    const arrayValue = value => {
+      if (Array.isArray(value)) return value.flatMap(arrayValue);
+      if (value && typeof value === 'object') return Object.values(value).flatMap(arrayValue);
+      return value == null || value === '' ? [] : [String(value)];
+    };
+    const unique = values => [...new Set(values.filter(Boolean))];
+    const getApiKey = () => sessionStorage.getItem(API_KEY_STORAGE) || '';
+    const setApiKey = key => key ? sessionStorage.setItem(API_KEY_STORAGE,key) : sessionStorage.removeItem(API_KEY_STORAGE);
+    const jsonCopy = value => JSON.parse(JSON.stringify(value));
+    const newProjectId = () => globalThis.crypto?.randomUUID?.() || `project-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
+    let projectDbPromise = null, projectSaveTimer = null;
 
-    const FIELDS = [
-      { k: "name", label: "이름" },
-      { k: "sex", label: "성별" },
-      { k: "age", label: "나이" },
-      { k: "region", label: "지역" },
-      { k: "occupation", label: "직업" },
-      { k: "education", label: "학력" },
-      { k: "marital", label: "혼인상태" },
-      { k: "household", label: "가구형태" },
-      { k: "persona", label: "페르소나 요약" },
-      { k: "reason", label: "통계 기반 추천 이유" },
-      { k: "coverage", label: "대표성" },
-    ];
+    function openProjectDb(){
+      if(!('indexedDB' in window))return Promise.reject(Error('INDEXED_DB_UNAVAILABLE'));
+      if(projectDbPromise)return projectDbPromise;
+      projectDbPromise=new Promise((resolve,reject)=>{const request=indexedDB.open(PROJECT_DB_NAME,1);request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(PROJECT_STORE))db.createObjectStore(PROJECT_STORE,{keyPath:'id'})};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||Error('PROJECT_DB_OPEN_FAILED'))});
+      return projectDbPromise;
+    }
+    async function projectDbAction(mode,action){
+      const db=await openProjectDb();
+      return new Promise((resolve,reject)=>{const transaction=db.transaction(PROJECT_STORE,mode),store=transaction.objectStore(PROJECT_STORE),request=action(store);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||Error('PROJECT_DB_REQUEST_FAILED'));transaction.onabort=()=>reject(transaction.error||Error('PROJECT_DB_TRANSACTION_FAILED'))});
+    }
+    function fallbackProjects(){try{const value=JSON.parse(localStorage.getItem(PROJECT_FALLBACK_KEY)||'[]');return Array.isArray(value)?value:[]}catch{return []}}
+    function saveFallbackProject(record){const safe={...record,fileHandle:null},items=[safe,...fallbackProjects().filter(item=>item.id!==record.id)];localStorage.setItem(PROJECT_FALLBACK_KEY,JSON.stringify(items))}
+    async function listProjectRecords(){
+      let items=[];try{items=await projectDbAction('readonly',store=>store.getAll())}catch{items=fallbackProjects()}
+      return (Array.isArray(items)?items:[]).sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+    }
+    async function putProjectRecord(record){
+      try{await projectDbAction('readwrite',store=>store.put(record))}
+      catch{try{await projectDbAction('readwrite',store=>store.put({...record,fileHandle:null}))}catch{saveFallbackProject(record)}}
+    }
+    async function deleteProjectRecord(id){
+      try{await projectDbAction('readwrite',store=>store.delete(id))}catch{}
+      localStorage.setItem(PROJECT_FALLBACK_KEY,JSON.stringify(fallbackProjects().filter(item=>item.id!==id)));
+    }
+    function resumableScreen(){
+      if(state.interviews.length)return state.screen==='questions'&&state.questionGroups.length?'questions':'interview';
+      if(state.questionGroups.length&&state.selectedPersonaId)return 'questions';
+      if(state.recommendations.length)return ['results','select'].includes(state.screen)?state.screen:'results';
+      return state.analysis?'analysis':'topic';
+    }
+    function projectSnapshot(){
+      return {screen:resumableScreen(),topic:state.topic,description:state.description,analysis:jsonCopy(state.analysis),recommendations:state.recommendations.map(row=>({personaId:personaId(row),score:row.score,localScore:row.localScore,evaluation:jsonCopy(row.evaluation||{})})),candidateCount:state.candidateCount||state.candidates.length,selectedPersonaId:state.selectedPersonaId,questionGroups:jsonCopy(state.questionGroups),selectedQuestionIds:[...state.selectedQuestionIds],interviews:jsonCopy(state.interviews),activeInterviewId:state.activeInterviewId};
+    }
+    function currentProjectRecord(){
+      return {id:state.projectId,title:state.topic||'제목 없는 프로젝트',description:state.description||'',createdAt:state.projects.find(item=>item.id===state.projectId)?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),fileName:state.fileName,fileSize:state.fileSize,fileLastModified:state.fileLastModified,sheetName:state.sheetName,fileHandle:state.fileHandle||null,snapshot:projectSnapshot()};
+    }
+    async function persistCurrentProject(){
+      if(!state.projectId||!state.topic||!state.fileName||state.busy)return;
+      const record=currentProjectRecord();await putProjectRecord(record);state.projects=[record,...state.projects.filter(item=>item.id!==record.id)];
+    }
+    function scheduleProjectSave(){clearTimeout(projectSaveTimer);projectSaveTimer=setTimeout(()=>persistCurrentProject().catch(error=>console.error('Project save failed:',error)),120)}
+    async function refreshProjectList(){state.projects=await listProjectRecords();return state.projects}
+    function projectStageLabel(record){const snapshot=record?.snapshot||{},count=Array.isArray(snapshot.interviews)?snapshot.interviews.length:0;if(count)return `인터뷰 ${count}회 완료`;if(snapshot.questionGroups?.length)return '인터뷰 질문 설계';if(snapshot.recommendations?.length)return 'Persona 10명 선정 완료';if(snapshot.analysis)return '과제 분석 완료';return '시작 전'}
 
-    const SAMPLE_TOPICS = [
-      "저가 커피 프랜차이즈 신메뉴",
-      "전기차 구매 의향 조사",
-      "OTT 구독 서비스",
-      "실버 헬스케어 앱",
-      "지방 소도시 관광 활성화",
-    ];
+    function renderIcons(){requestAnimationFrame(()=>window.lucide?.createIcons?.())}
+    function showToast(message,duration=2600){const toast=$('#toast');toast.textContent=message;toast.hidden=false;clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.hidden=true,duration)}
+    const errorMessage = message => `<div class="message message-error" role="alert">${esc(message)}</div>`;
+    function sleep(ms,signal){return new Promise((resolve,reject)=>{const timer=setTimeout(resolve,ms);signal?.addEventListener('abort',()=>{clearTimeout(timer);reject(new DOMException('Aborted','AbortError'))},{once:true})})}
 
-    async function fetchBatch(topic, startIdx, count, existing, apiKey) {
-      const existingNote = existing.length
-        ? `이미 추천된 페르소나(중복 금지): ${existing
-            .map((p) => `${p.age}세 ${p.sex} ${p.occupation}(${p.region})`)
-            .join(", ")}`
-        : "";
-      
-      const prompt = `당신은 NVIDIA Nemotron-Personas-Korea 데이터셋(대한민국 실제 인구 분포 기반 합성 페르소나 100만 건) 전문가입니다.
-${STATS_CONTEXT}
-
-주제: "${topic}"
-
-이 주제에 적합한 한국인 페르소나 ${count}명(전체 10명 중 ${startIdx + 1}~${startIdx + count}번째)을 추천하세요.
-${existingNote}
-
-규칙:
-1. 연령·성별·지역·직업·학력 분포가 위 통계와 일치하도록 현실적으로 배정 (주제 타깃층에 맞추되, 데이터셋 분포상 대표성 있는 세그먼트 위주로).
-2. reason(w)에는 반드시 위 통계 수치를 인용해 "이 세그먼트가 한국 인구에서 얼마나 대표적인지"를 근거로 제시. 예: "50-64세는 데이터셋 최대 코호트(구간별 약 9%)로...".
-3. coverage(c)는 해당 세그먼트의 대략적 인구 비중을 짧게. 예: "30대 미혼 여성 · 해당 연령대의 약 31%".
-4. 이름은 성씨 분포(김·이·박·정·최 상위 54%) 반영.
-5. 다른 텍스트 없이 아래 JSON 배열만 출력 (마크다운 백틱 금지):
-[{"n":"이름","s":"남자|여자","a":나이,"r":"시도-시군구","o":"직업","e":"학력","m":"혼인상태","h":"가구형태","p":"한 문장 페르소나 요약","w":"통계 수치 인용한 추천 이유 1-2문장","c":"세그먼트 · 비중"}]`;
-
-      // gemini-flash-latest 모델 고정
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-      
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-          }
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error?.message || "API 요청 실패");
+    function parseGeminiJson(rawText){
+      if(!rawText||typeof rawText!=='string')throw Error('Gemini 응답에 내용이 없습니다.');
+      const clean=rawText.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/i,'').trim();
+      try{return JSON.parse(clean)}catch(_){
+        const starts=[clean.indexOf('{'),clean.indexOf('[')].filter(index=>index>=0),start=starts.length?Math.min(...starts):-1,end=Math.max(clean.lastIndexOf('}'),clean.lastIndexOf(']'));
+        if(start>=0&&end>start)try{return JSON.parse(clean.slice(start,end+1))}catch(_){/* final error below */}
+        throw Error('Gemini 응답을 JSON으로 해석하지 못했습니다. 다시 시도해 주세요.');
       }
-
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const clean = text.replace(/```json|```/g, "").trim();
-      const start = clean.indexOf("[");
-      const end = clean.lastIndexOf("]");
-      const parsed = JSON.parse(clean.slice(start, end + 1));
-      
-      return parsed.map((x) => ({
-        name: x.n,
-        sex: x.s,
-        age: x.a,
-        region: x.r,
-        occupation: x.o,
-        education: x.e,
-        marital: x.m,
-        household: x.h,
-        persona: x.p,
-        reason: x.w,
-        coverage: x.c,
-      }));
     }
 
-    function PersonaFinder() {
-      const [apiKey, setApiKey] = useState("");
-      const [topic, setTopic] = useState("");
-      const [personas, setPersonas] = useState([]);
-      const [loading, setLoading] = useState(false);
-      const [stage, setStage] = useState("");
-      const [error, setError] = useState("");
-      const [doneTopic, setDoneTopic] = useState("");
-
-      const search = async (t) => {
-        const q = (t ?? topic).trim();
-        if (!q || loading) return;
-        
-        if (!apiKey.trim()) {
-          setError("화면 상단의 API Key 입력 칸에 올바른 Gemini API 키를 입력해 주세요.");
-          return;
+    class GeminiClient{
+      constructor(apiKey){this.apiKey=apiKey;this.model=MODEL_NAME}
+      async generateContent(prompt,signal){
+        if(!this.apiKey)throw Error('Gemini API Key를 입력해 주세요.');
+        const url=`https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+        let lastError;
+        for(let attempt=0;attempt<3;attempt+=1){
+          try{
+            const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json'}}),signal});
+            if(!response.ok){
+              let detail='';try{detail=(await response.json())?.error?.message||''}catch(_){/* optional body */}
+              if(response.status===401||response.status===403||/API key/i.test(detail))throw Error('API_KEY_INVALID');
+              if(response.status===429)throw Error('RATE_LIMIT');
+              if(response.status>=500)throw Error('SERVER_TEMPORARY');
+              throw Error(detail||`Gemini ${MODEL_NAME} 연결에 실패했습니다.`);
+            }
+            const payload=await response.json(),responseText=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||'').join('\n').trim();
+            if(!responseText)throw Error('Gemini 응답 형식이 올바르지 않습니다.');
+            return parseGeminiJson(responseText);
+          }catch(error){
+            if(error.name==='AbortError')throw error;
+            if(error.message==='API_KEY_INVALID')throw Error('잘못되었거나 권한이 없는 API Key입니다.');
+            lastError=error;
+            const retryable=['RATE_LIMIT','SERVER_TEMPORARY','Failed to fetch','NetworkError'].some(code=>String(error.message).includes(code));
+            if(!retryable||attempt===2)break;
+            await sleep(900*(attempt+1),signal);
+          }
         }
-
-        setTopic(q);
-        setLoading(true);
-        setError("");
-        setPersonas([]);
-        
-        try {
-          setStage("데이터셋 분포에서 타깃 세그먼트 분석 중…");
-          const first = await fetchBatch(q, 0, 5, [], apiKey);
-          setPersonas(first);
-          setStage("나머지 페르소나 5명 매칭 중…");
-          const second = await fetchBatch(q, 5, 5, first, apiKey);
-          setPersonas([...first, ...second]);
-          setDoneTopic(q);
-        } catch (e) {
-          console.error(e);
-          setError("페르소나를 생성하지 못했습니다. API 키를 확인하시거나 잠시 후 다시 시도해 주세요.");
-        } finally {
-          setLoading(false);
-          setStage("");
-        }
-      };
-
-      const downloadExcel = () => {
-        const rows = personas.map((p, i) => {
-          const row = { 번호: i + 1 };
-          FIELDS.forEach((f) => (row[f.label] = p[f.k]));
-          return row;
-        });
-        const ws = window.XLSX.utils.json_to_sheet(rows);
-        ws["!cols"] = [
-          { wch: 5 }, { wch: 10 }, { wch: 6 }, { wch: 5 }, { wch: 16 },
-          { wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 16 }, { wch: 50 },
-          { wch: 60 }, { wch: 30 },
-        ];
-        const wb = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(wb, ws, "추천 페르소나");
-        const meta = window.XLSX.utils.aoa_to_sheet([
-          ["주제", doneTopic],
-          ["기반 데이터", "NVIDIA Nemotron-Personas-Korea (KOSIS·대법원·건보공단 등 실측 분포 기반, 100만 레코드)"],
-          ["생성일", new Date().toLocaleString("ko-KR")],
-        ]);
-        meta["!cols"] = [{ wch: 12 }, { wch: 80 }];
-        window.XLSX.utils.book_append_sheet(wb, meta, "정보");
-        window.XLSX.writeFile(wb, `페르소나_추천_${doneTopic.slice(0, 12)}.xlsx`);
-      };
-
-      return (
-        <div style={{ minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Apple SD Gothic Neo', 'Pretendard', 'Malgun Gothic', sans-serif", color: "#1D1D1F", WebkitFontSmoothing: "antialiased" }}>
-          <header style={{ position: "sticky", top: 0, zIndex: 20, backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", background: "rgba(251,251,253,0.8)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-            <div style={{ maxWidth: 980, margin: "0 auto", padding: "14px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>Persona Finder</div>
-                <div style={{ fontSize: 12, color: "#86868B" }}>Nemotron-Personas-Korea 기반</div>
-              </div>
-              
-              {/* API 키 입력 및 발급 링크 영역 */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#0071E3", textDecoration: "none", fontWeight: 500 }}>
-                  API 발급받기
-                </a>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Gemini API Key 입력"
-                  style={{ height: 32, padding: "0 12px", borderRadius: 8, border: "1px solid #D2D2D7", background: "#FFF", fontSize: 13, outline: "none", color: "#1D1D1F", width: 200, boxSizing: "border-box" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#0071E3")}
-                  onBlur={(e) => (e.target.style.borderColor = "#D2D2D7")}
-                />
-              </div>
-            </div>
-          </header>
-
-          <main style={{ maxWidth: 980, margin: "0 auto", padding: "0 22px 96px" }}>
-            <section style={{ textAlign: "center", padding: "72px 0 40px" }}>
-              <h1 style={{ fontSize: "clamp(34px, 6vw, 56px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.08, margin: 0 }}>
-                주제를 말해보세요.
-                <br />
-                <span style={{ background: "linear-gradient(90deg,#0071E3,#40A9FF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                  대한민국이 답합니다.
-                </span>
-              </h1>
-              <p style={{ maxWidth: 560, margin: "18px auto 0", fontSize: 17, lineHeight: 1.5, color: "#6E6E73" }}>
-                통계청·대법원 등 실측 분포로 합성된 100만 페르소나 데이터셋에서, 입력한 주제에 가장 대표성 있는 한국인 페르소나 10명을 통계적 근거와 함께 추천합니다.
-              </p>
-
-              <div style={{ maxWidth: 620, margin: "36px auto 0", display: "flex", gap: 10 }}>
-                <input
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && search()}
-                  placeholder="예: 저가 커피 프랜차이즈 신메뉴"
-                  disabled={loading}
-                  style={{ flex: 1, height: 52, padding: "0 22px", borderRadius: 980, border: "1px solid #D2D2D7", background: "#FFF", fontSize: 16, outline: "none", color: "#1D1D1F", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", boxSizing: "border-box" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#0071E3")}
-                  onBlur={(e) => (e.target.style.borderColor = "#D2D2D7")}
-                />
-                <button
-                  onClick={() => search()}
-                  disabled={loading || !topic.trim()}
-                  style={{ height: 52, padding: "0 28px", borderRadius: 980, border: "none", background: loading || !topic.trim() ? "#B0D4F5" : "#0071E3", color: "#FFF", fontSize: 16, fontWeight: 500, cursor: loading || !topic.trim() ? "default" : "pointer", transition: "background .2s", whiteSpace: "nowrap" }}
-                >
-                  {loading ? "분석 중…" : "추천받기"}
-                </button>
-              </div>
-
-              <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-                {SAMPLE_TOPICS.map((t) => (
-                  <button key={t} onClick={() => search(t)} disabled={loading}
-                    style={{ padding: "7px 14px", borderRadius: 980, border: "1px solid #D2D2D7", background: "transparent", fontSize: 13, color: "#0071E3", cursor: "pointer" }}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {loading && (
-              <div style={{ textAlign: "center", padding: "8px 0 32px", color: "#6E6E73", fontSize: 14 }}>
-                <div style={{ width: 22, height: 22, margin: "0 auto 12px", border: "2.5px solid #E5E5EA", borderTopColor: "#0071E3", borderRadius: "50%", animation: "pfspin .8s linear infinite" }} />
-                {stage}
-                <style>{`@keyframes pfspin{to{transform:rotate(360deg)}}`}</style>
-              </div>
-            )}
-            
-            {error && (
-              <div style={{ maxWidth: 620, margin: "0 auto 32px", padding: "14px 20px", borderRadius: 14, background: "#FFF2F2", color: "#C0392B", fontSize: 14, textAlign: "center" }}>
-                {error}
-              </div>
-            )}
-
-            {personas.length > 0 && (
-              <>
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 12, margin: "8px 0 20px" }}>
-                  <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>
-                    추천 페르소나 <span style={{ color: "#86868B", fontWeight: 500 }}>{personas.length}/10</span>
-                  </h2>
-                  {!loading && personas.length === 10 && (
-                    <button onClick={downloadExcel}
-                      style={{ height: 40, padding: "0 20px", borderRadius: 980, border: "none", background: "#1D1D1F", color: "#FFF", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      Excel 다운로드
-                    </button>
-                  )}
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
-                  {personas.map((p, i) => (
-                    <article key={i} style={{ background: "#FFF", borderRadius: 20, padding: 24, boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)", display: "flex", flexDirection: "column", gap: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: "50%", background: p.sex === "여자" ? "linear-gradient(135deg,#FF9EB5,#FF6482)" : "linear-gradient(135deg,#6BB6FF,#0071E3)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 600, flexShrink: 0 }}>
-                          {p.name?.[0]}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em" }}>
-                            {p.name} <span style={{ fontSize: 13, fontWeight: 400, color: "#86868B" }}>{p.age}세 · {p.sex}</span>
-                          </div>
-                          <div style={{ fontSize: 13, color: "#6E6E73", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {p.occupation} · {p.region}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {[p.education, p.marital, p.household].filter(Boolean).map((tag, j) => (
-                          <span key={j} style={{ fontSize: 11.5, padding: "4px 10px", borderRadius: 980, background: "#F5F5F7", color: "#515154" }}>{tag}</span>
-                        ))}
-                      </div>
-
-                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#1D1D1F" }}>{p.persona}</p>
-
-                      <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #F0F0F2" }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: "#0071E3", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 5 }}>왜 이 페르소나인가</div>
-                        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "#515154" }}>{p.reason}</p>
-                        {p.coverage && (
-                          <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, color: "#0071E3", background: "rgba(0,113,227,0.08)", padding: "5px 12px", borderRadius: 980 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0071E3" }} />
-                            {p.coverage}
-                          </div>
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <p style={{ marginTop: 56, textAlign: "center", fontSize: 12, color: "#86868B", lineHeight: 1.6 }}>
-              추천은 NVIDIA Nemotron-Personas-Korea(CC BY 4.0)의 공개 분포 통계를 근거로 AI가 생성한 합성 페르소나이며, 실존 인물과 무관합니다.
-            </p>
-          </main>
-        </div>
-      );
+        if(lastError?.message==='RATE_LIMIT')throw Error('Gemini 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.');
+        if(lastError?.message==='SERVER_TEMPORARY')throw Error('Gemini 서버가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.');
+        if(/Failed to fetch|NetworkError/.test(String(lastError?.message)))throw Error('네트워크 연결 또는 브라우저의 API 접근 설정을 확인해 주세요.');
+        throw lastError||Error(`Gemini ${MODEL_NAME} 연결에 실패했습니다.`);
+      }
     }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<PersonaFinder />);
+    function normalizeAnalysis(value){
+      const result=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+      ['importantContexts','importantBehaviors','personaTypes','productsAndServices','lifeContexts','painPoints','needs','keywords','expandedKeywords','bilingualTerms','priorityFields','occupations'].forEach(key=>result[key]=arrayValue(result[key]));
+      return result;
+    }
+    function stepInfo(){return ({upload:[2,'Persona 데이터 업로드'],topic:[3,'과제 또는 주제'],analysis:[4,state.busy?'AI 분석 진행':'과제 의미 분석'],results:[5,'추천 Persona 10명'],select:[6,'인터뷰 대상 선택'],questions:[7,state.busy?'질문 생성 중':'인터뷰 질문 설계'],interview:[8,state.busy?'인터뷰 진행 중':'인터뷰 결과'],done:[8,'저장 완료']}[state.screen]||[1,'Gemini 연결'])}
+    function previousScreen(){return ({topic:'upload',analysis:'topic',results:'analysis',select:'results',questions:'select',interview:'questions',done:state.interviews.length?'interview':'results'})[state.screen]||''}
+    function nextScreen(){
+      if(state.screen==='upload'&&state.rows.length)return 'topic';
+      if(state.screen==='topic'&&state.analysis)return 'analysis';
+      if(state.screen==='analysis'&&state.recommendations.length)return 'results';
+      if(state.screen==='results'&&state.recommendations.length)return 'select';
+      if(state.screen==='select'&&state.questionGroups.length)return 'questions';
+      if(state.screen==='questions'&&state.activeInterviewId)return 'interview';
+      return '';
+    }
+    function headerTemplate(){
+      const [step,title]=stepInfo(),backDisabled=!previousScreen()||state.busy,nextDisabled=!nextScreen()||state.busy;
+      return `<header class="app-header"><button class="icon-button header-button" id="backButton" aria-label="이전 단계" ${backDisabled?'disabled':''}><i data-lucide="chevron-left"></i></button><div class="header-title"><small>Nemotron Research Lab</small><strong>${esc(title)}</strong></div><button class="icon-button header-button" id="nextButton" aria-label="다음 단계" ${nextDisabled?'disabled':''}><i data-lucide="chevron-right"></i></button></header><section class="step-area"><div class="step-meta"><span>Step ${step}</span><span>${step} / 8</span></div><h1>${esc(title)}</h1><div class="progress-track"><i style="width:${step/8*100}%"></i></div></section>`;
+    }
+    const standardScreen=(content,bottom='')=>`<div class="screen fade-in">${headerTemplate()}<main class="content ${bottom?'':'no-bottom'}">${content}</main>${bottom?`<div class="bottom-bar"><div class="bottom-stack">${bottom}</div></div>`:''}</div>`;
+
+    function render(options={}){
+      const preserveScroll=Boolean(options.preserveScroll),scrollTop=preserveScroll?(window.scrollY||document.documentElement.scrollTop||0):0;
+      const app=$('#app'),renderers={api:renderApi,upload:renderUpload,topic:renderTopic,analysis:renderAnalysis,results:renderResults,select:renderPersonaSelect,questions:renderQuestions,interview:renderInterview,done:renderDone};
+      (renderers[state.screen]||renderApi)(app);bindGlobalNavigation();renderIcons();
+      if(preserveScroll)requestAnimationFrame(()=>window.scrollTo({top:scrollTop,behavior:'auto'}));else window.scrollTo({top:0,behavior:'auto'});
+      if(state.projectId&&!state.busy&&['analysis','results','select','questions','interview'].includes(state.screen))scheduleProjectSave();
+    }
+    function bindGlobalNavigation(){if($('#backButton'))$('#backButton').onclick=goBack;if($('#nextButton'))$('#nextButton').onclick=goForward}
+    function goBack(){if(state.busy)return;const previous=previousScreen();if(previous){state.screen=previous;state.error='';render()}}
+    function goForward(){if(state.busy)return;const next=nextScreen();if(next){state.screen=next;state.error='';render()}}
+
+    function renderApi(app){
+      const key=getApiKey();
+      app.innerHTML=`<main class="api-screen screen fade-in"><div class="hero-icon"><i data-lucide="fingerprint"></i></div><h1 class="hero-title">Persona Lab.<br>Find Insight!</h1><p class="hero-subtitle">AI 기반 인터뷰 대상자 추천 도구</p><a class="api-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">개인 API Key 발급받기</a><div class="input-wrap"><input class="api-input" id="apiInput" type="password" autocomplete="off" spellcheck="false" placeholder="API 입력" value="${esc(key)}" aria-label="Gemini API Key"><button class="icon-button" id="toggleKey" aria-label="API Key 표시"><i data-lucide="eye"></i></button></div><p class="security-note">분석을 위해 유효한 Gemini API Key를 직접 입력해 주세요.<br>Key는 이 브라우저 탭의 세션에만 임시 저장됩니다.</p><button class="btn btn-primary btn-full" id="connectButton">${key?'API Key 확인 후 계속':'API Key 입력 후 시작'} <i data-lucide="arrow-right"></i></button><div id="apiMessage">${state.error?errorMessage(state.error):''}</div></main>`;
+      $('#toggleKey').onclick=()=>{const input=$('#apiInput'),toggle=$('#toggleKey'),showing=input.type==='text';input.type=showing?'password':'text';toggle.innerHTML=`<i data-lucide="${showing?'eye':'eye-off'}"></i>`;toggle.setAttribute('aria-label',showing?'API Key 표시':'API Key 숨기기');renderIcons()};
+      $('#apiInput').onkeydown=event=>{if(event.key==='Enter')connectApi()};$('#connectButton').onclick=connectApi;
+    }
+    async function connectApi(){
+      const input=$('#apiInput'),button=$('#connectButton'),message=$('#apiMessage'),key=input?.value.trim()||'';
+      if(!key){message.innerHTML=errorMessage('API Key를 입력해 주세요.');input?.focus();return}
+      state.controller=new AbortController();button.disabled=true;button.innerHTML='<i data-lucide="loader-circle"></i> 연결 확인 중';renderIcons();message.innerHTML='';
+      try{await new GeminiClient(key).generateContent('Return JSON only: {"connected":true}',state.controller.signal);setApiKey(key);state.error='';state.screen='upload';render()}
+      catch(error){setApiKey('');state.error=error.message;message.innerHTML=errorMessage(error.message);button.disabled=false;button.innerHTML='API Key 다시 확인 <i data-lucide="refresh-cw"></i>';renderIcons()}
+      finally{state.controller=null}
+    }
+
+    function renderUpload(app){
+      const hasData=state.rows.length>0,pending=state.pendingProject;
+      const reconnect=pending?`<section class="reconnect-box"><h3>Nemotron 파일 재연결 필요</h3><p><b>${esc(pending.title||'기존 프로젝트')}</b>를 계속하려면 아래 원본 파일을 다시 연결해 주세요.</p><strong class="reconnect-file">${esc(pending.fileName||'파일명 정보 없음')}</strong><button class="btn btn-primary btn-full" id="reconnectButton"><i data-lucide="link"></i> 이 파일 연결하기</button></section>`:'';
+      const content=`<section class="card card-dark"><div class="eyebrow">Design Researcher AI</div><h2 class="display-title">실제 Persona 데이터에서<br>최적의 대상자를 찾습니다.</h2><p class="body-copy">업로드한 Excel 전체를 검색한 뒤, 과제에 가장 적합한 10명을 추천합니다.</p></section>${reconnect}<section class="card"><div class="eyebrow">Step 2 · Dataset</div><h2 class="display-title">Nemotron Excel 업로드</h2><div class="drop-zone" id="dropZone"><div class="drop-icon"><i data-lucide="file-spreadsheet"></i></div><strong>${hasData?'Persona 데이터 준비 완료':pending?'연결할 원본 파일을 선택해 주세요':'파일을 선택해 주세요'}</strong><p>${hasData?`${esc(state.fileName)} · 실제 Persona ${state.rows.length.toLocaleString()}명`:pending?esc(pending.fileName):'XLSX, XLS, CSV · 최대 50MB'}</p><button class="btn btn-outline" id="pickFile"><i data-lucide="upload-cloud"></i>${hasData?'다른 파일 선택':pending?'파일 다시 연결':'Excel 불러오기'}</button><input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden></div><div>${hasData?factsTemplate():''}</div><button class="btn btn-outline btn-full saved-project-button" id="projectListButton"><i data-lucide="folder-clock"></i> 기존 프로젝트 보기 <span class="saved-count">${state.projects.length}</span></button><div>${state.error?errorMessage(state.error):''}</div></section>`;
+      const bottom=hasData?'<button class="btn btn-dark btn-full" id="topicButton">과제 또는 주제 입력하기 <i data-lucide="arrow-right"></i></button>':'';
+      app.innerHTML=standardScreen(content,bottom);
+      const input=$('#fileInput'),drop=$('#dropZone');$('#pickFile').onclick=choosePersonaFile;if($('#reconnectButton'))$('#reconnectButton').onclick=choosePersonaFile;input.onchange=event=>event.target.files?.[0]&&readPersonaFile(event.target.files[0],null);
+      ['dragenter','dragover'].forEach(type=>drop.addEventListener(type,event=>{event.preventDefault();drop.classList.add('dragging')}));['dragleave','drop'].forEach(type=>drop.addEventListener(type,event=>{event.preventDefault();drop.classList.remove('dragging')}));drop.addEventListener('drop',event=>event.dataTransfer?.files?.[0]&&readPersonaFile(event.dataTransfer.files[0],null));
+      $('#projectListButton').onclick=openProjectList;
+      if($('#topicButton'))$('#topicButton').onclick=()=>{state.screen='topic';state.error='';render()};
+    }
+    function factsTemplate(){return `<div class="facts"><div class="fact"><small>Sheet</small><strong title="${esc(state.sheetName)}">${esc(state.sheetName)}</strong></div><div class="fact"><small>Persona</small><strong>${state.rows.length.toLocaleString()}명</strong></div><div class="fact"><small>Fields</small><strong>${state.fields.length}개</strong></div></div>`}
+    function makeUniqueHeaders(values){const used=new Map();return values.map((value,index)=>{const base=String(value??'').trim()||`컬럼_${index+1}`,count=(used.get(base)||0)+1;used.set(base,count);return count===1?base:`${base}_${count}`})}
+    async function choosePersonaFile(){
+      if(typeof window.showOpenFilePicker==='function'){
+        try{const [handle]=await window.showOpenFilePicker({multiple:false,types:[{description:'Nemotron 데이터',accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'],'application/vnd.ms-excel':['.xls'],'text/csv':['.csv']}}]});if(handle){await readPersonaFile(await handle.getFile(),handle);return}}
+        catch(error){if(error?.name==='AbortError')return}
+      }
+      $('#fileInput')?.click();
+    }
+    async function parsePersonaFile(file){
+      const extension=(file.name.split('.').pop()||'').toLowerCase();
+      if(!['xlsx','xls','csv'].includes(extension))throw Error('XLSX, XLS 또는 CSV 파일만 업로드할 수 있습니다.');
+      if(file.size>MAX_FILE_BYTES)throw Error('파일이 50MB를 초과합니다. 데이터를 나누거나 파일 크기를 줄여 주세요.');
+      if(typeof XLSX==='undefined')throw Error('Excel 처리 모듈을 불러오지 못했습니다. 인터넷 연결 후 새로고침해 주세요.');
+      const workbook=extension==='csv'?XLSX.read(await file.text(),{type:'string',codepage:65001,cellDates:true}):XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+      if(!workbook.SheetNames.length)throw Error('Sheet가 없는 파일입니다.');
+      const sheetName=workbook.SheetNames.includes('stage1_candidates')?'stage1_candidates':workbook.SheetNames.find(name=>name.toLowerCase()!=='meta')||workbook.SheetNames[0],worksheet=workbook.Sheets[sheetName],matrix=XLSX.utils.sheet_to_json(worksheet,{header:1,defval:'',raw:false});
+      if(!matrix.length||!matrix[0]?.length)throw Error('첫 행에서 컬럼명을 찾지 못했습니다.');
+      const headers=makeUniqueHeaders(matrix[0]),rows=XLSX.utils.sheet_to_json(worksheet,{header:headers,range:1,defval:'',raw:false}).filter(row=>headers.some(field=>String(row[field]??'').trim()!=='')).map((row,index)=>({...row,__index:index+2}));
+      if(!rows.length)throw Error('검색할 Persona 행이 없습니다. 컬럼명 아래에 데이터를 넣어 주세요.');
+      return {headers,rows,sheetName};
+    }
+    async function readPersonaFile(file,fileHandle=null){
+      state.error='';const pending=state.pendingProject;
+      if(pending?.fileName&&file.name!==pending.fileName){state.error=`선택한 파일이 다릅니다. 이 프로젝트에는 ${pending.fileName} 파일을 연결해 주세요.`;render();return}
+      if($('#pickFile')){$('#pickFile').disabled=true;$('#pickFile').textContent='파일을 읽는 중…'}
+      try{
+        const dataset=await parsePersonaFile(file);
+        if(pending){restoreProjectWithData(pending,dataset,file,fileHandle);showToast(`“${pending.title}” 프로젝트를 다시 불러왔습니다.`);return}
+        Object.assign(state,{fields:dataset.headers,rows:dataset.rows,fileName:file.name,fileSize:Number(file.size)||0,fileLastModified:Number(file.lastModified)||0,fileHandle:fileHandle||null,sheetName:dataset.sheetName,projectId:'',pendingProject:null,topic:'',description:'',analysis:null,recommendations:[],candidates:[],candidateCount:0,selectedPersonaId:'',questionGroups:[],selectedQuestionIds:[],interviews:[],activeInterviewId:'',error:'',warning:'',screen:'upload'});render();showToast(`${dataset.rows.length.toLocaleString()}명의 Persona를 불러왔습니다.`);
+      }catch(error){state.error=`Excel을 읽을 수 없습니다. ${error.message}`;render()}
+    }
+    function restoreProjectWithData(record,dataset,file,fileHandle){
+      const snapshot=record.snapshot||{},rowMap=new Map(dataset.rows.map(row=>[personaId(row),row])),savedRecommendations=Array.isArray(snapshot.recommendations)?snapshot.recommendations:[],recommendations=savedRecommendations.map(saved=>{const row=rowMap.get(String(saved.personaId));return row?{...row,score:saved.score,localScore:saved.localScore,evaluation:saved.evaluation||{}}:null}).filter(Boolean);
+      if(savedRecommendations.length&&recommendations.length!==savedRecommendations.length)throw Error(`저장된 Persona를 찾지 못했습니다. ${record.fileName}의 원본 상태를 확인해 주세요.`);
+      const interviews=Array.isArray(snapshot.interviews)?snapshot.interviews:[],questionGroups=Array.isArray(snapshot.questionGroups)?snapshot.questionGroups:[];
+      let screen=snapshot.screen||'analysis';if(screen==='interview'&&!interviews.length)screen=questionGroups.length?'questions':recommendations.length?'results':'analysis';if(screen==='questions'&&!questionGroups.length)screen=recommendations.length?'select':'analysis';if(['results','select'].includes(screen)&&!recommendations.length)screen='analysis';if(!snapshot.analysis)screen='topic';
+      Object.assign(state,{fields:dataset.headers,rows:dataset.rows,fileName:file.name,fileSize:Number(file.size)||Number(record.fileSize)||0,fileLastModified:Number(file.lastModified)||Number(record.fileLastModified)||0,fileHandle:fileHandle||null,sheetName:dataset.sheetName,projectId:record.id,pendingProject:null,topic:snapshot.topic||record.title||'',description:snapshot.description||record.description||'',analysis:snapshot.analysis||null,recommendations,candidates:[],candidateCount:Number(snapshot.candidateCount)||0,selectedPersonaId:snapshot.selectedPersonaId||'',questionGroups,selectedQuestionIds:Array.isArray(snapshot.selectedQuestionIds)?snapshot.selectedQuestionIds:[],interviews,activeInterviewId:snapshot.activeInterviewId||'',error:'',warning:'',busy:false,phase:'',controller:null,screen});render();
+    }
+    function requestProjectReconnect(record,reason=''){
+      Object.assign(state,{screen:'upload',rows:[],fields:[],fileName:'',sheetName:'',fileHandle:null,projectId:'',pendingProject:record,topic:'',description:'',analysis:null,recommendations:[],candidates:[],candidateCount:0,selectedPersonaId:'',questionGroups:[],selectedQuestionIds:[],interviews:[],activeInterviewId:'',busy:false,phase:'',error:reason||`${record.fileName} 파일의 로컬 연결을 확인할 수 없습니다. 아래에서 원본 파일을 다시 연결해 주세요.`});render();
+    }
+    async function loadSavedProject(record){
+      closeModal();const handle=record?.fileHandle;
+      if(handle&&typeof handle.getFile==='function'){
+        try{let permission=typeof handle.queryPermission==='function'?await handle.queryPermission({mode:'read'}):'granted';if(permission!=='granted'&&typeof handle.requestPermission==='function')permission=await handle.requestPermission({mode:'read'});if(permission!=='granted')throw Error('파일 접근 권한이 필요합니다.');const file=await handle.getFile();if(record.fileName&&file.name!==record.fileName)throw Error(`연결된 파일명이 ${record.fileName}과 다릅니다.`);const dataset=await parsePersonaFile(file);restoreProjectWithData(record,dataset,file,handle);showToast(`“${record.title}” 프로젝트를 다시 불러왔습니다.`);return}catch(error){requestProjectReconnect(record,`${record.fileName} 파일을 자동으로 불러오지 못했습니다. 원본 파일을 다시 연결해 주세요.`);return}
+      }
+      requestProjectReconnect(record);
+    }
+    function formatProjectDate(value){const date=new Date(value);return Number.isNaN(date.getTime())?'저장 날짜 정보 없음':date.toLocaleString('ko-KR',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+    async function openProjectList(){
+      await refreshProjectList();const modal=$('#modal'),items=state.projects.map(record=>`<article class="project-item"><button class="project-open" data-load-project="${esc(record.id)}"><h3>${esc(record.title||'제목 없는 프로젝트')}</h3><p>${esc(record.fileName||'연결 파일 정보 없음')}<br>${esc(formatProjectDate(record.updatedAt))}</p><span class="project-stage">${esc(projectStageLabel(record))}</span></button><button class="project-delete" data-delete-project="${esc(record.id)}" aria-label="${esc(record.title||'프로젝트')} 삭제"><i data-lucide="trash-2"></i></button></article>`).join('');
+      modal.className='modal-backdrop';modal.hidden=false;modal.innerHTML=`<section class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="projectListTitle"><div class="modal-head"><div><div class="eyebrow" style="margin-bottom:3px">Saved Projects</div><h2 id="projectListTitle">기존 프로젝트</h2></div><button class="icon-button" id="closeModal" aria-label="프로젝트 목록 닫기"><i data-lucide="x"></i></button></div><div class="project-list">${items||'<div class="project-empty">아직 저장된 프로젝트가 없습니다.<br>과제 분석을 완료하면 이곳에 자동 저장됩니다.</div>'}</div></section>`;
+      $('#closeModal').onclick=closeModal;modal.onclick=event=>{if(event.target===modal)closeModal()};document.addEventListener('keydown',closeModalOnEscape);document.querySelectorAll('[data-load-project]').forEach(button=>button.onclick=()=>{const record=state.projects.find(item=>item.id===button.dataset.loadProject);if(record)loadSavedProject(record)});document.querySelectorAll('[data-delete-project]').forEach(button=>button.onclick=async event=>{event.stopPropagation();const record=state.projects.find(item=>item.id===button.dataset.deleteProject);if(!record)return;if(!window.confirm(`“${record.title}” 프로젝트를 삭제하시겠습니까?\n저장된 분석·인터뷰 결과가 삭제됩니다.`))return;await deleteProjectRecord(record.id);if(state.projectId===record.id)state.projectId='';if(state.pendingProject?.id===record.id)state.pendingProject=null;showToast('프로젝트를 삭제했습니다.');await openProjectList()});renderIcons();
+    }
+
+    function renderTopic(app){
+      const content=`<section class="results-intro"><h2>어떤 과제 또는 주제를 위한<br>인터뷰인가요?</h2><p>과제명만 입력해도 AI가 탐색 목적을 확장합니다.</p></section><section class="card"><label class="field-label" for="topicInput">과제 또는 리서치 주제</label><textarea class="text-area" id="topicInput" placeholder="예: AI 활용 TV 컨셉 개발">${esc(state.topic)}</textarea><p class="helper">새로운 니즈 발굴, 사용 경험 개선처럼 목적 중심으로 입력하셔도 됩니다.</p><label class="field-label" for="descriptionInput">추가 설명 <span style="color:var(--s400);font-weight:600">· 선택</span></label><textarea class="text-area compact" id="descriptionInput" placeholder="예: TV를 AI 기반 생활 플랫폼으로 확장할 새로운 사용자 니즈를 발견하고 싶습니다.">${esc(state.description)}</textarea><div id="topicMessage">${state.error?errorMessage(state.error):''}</div></section>`;
+      app.innerHTML=standardScreen(content,'<button class="btn btn-dark btn-full" id="analyzeButton">과제 의미 분석하기 <i data-lucide="sparkles"></i></button>');$('#analyzeButton').onclick=analyzeTopic;
+    }
+    async function analyzeTopic(){
+      const topic=$('#topicInput')?.value.trim()||'',description=$('#descriptionInput')?.value.trim()||'';
+      if(!topic){$('#topicMessage').innerHTML=errorMessage('과제 또는 리서치 주제를 입력해 주세요.');$('#topicInput').focus();return}
+      if(!state.rows.length){state.error='Persona Excel 파일을 먼저 업로드해 주세요.';state.screen='upload';render();return}
+      Object.assign(state,{projectId:state.projectId||newProjectId(),topic,description,busy:true,phase:'analyze',progress:18,progressText:'과제의 의미를 분석하고 있습니다',progressCount:'1 / 2',recommendations:[],candidates:[],candidateCount:0,selectedPersonaId:'',questionGroups:[],selectedQuestionIds:[],interviews:[],activeInterviewId:'',error:'',warning:'',screen:'analysis',controller:new AbortController()});render();
+      try{const response=await new GeminiClient(getApiKey()).generateContent(`${PROMPTS.analyze}\n\nTOPIC:\n${state.topic}\n\nDESCRIPTION:\n${state.description||'추가 설명 없음'}`,state.controller.signal);state.analysis=normalizeAnalysis(response);Object.assign(state,{busy:false,phase:'review',progress:100,progressText:'과제 해석 완료',progressCount:'2 / 2'});render()}
+      catch(error){Object.assign(state,{error:error.name==='AbortError'?'분석을 취소했습니다.':error.message,screen:'topic',busy:false,phase:''});render()}
+      finally{state.controller=null}
+    }
+
+    function renderAnalysis(app){
+      if(state.busy){renderLoading(app);return}
+      const analysis=state.analysis||{},rows=[['핵심 목적',analysis.researchIntent],['주요 탐색 영역',analysis.importantContexts],['주요 행동',analysis.importantBehaviors],['관련 사용자 유형',analysis.personaTypes],['잠재 Needs',analysis.needs]],keywords=unique([...arrayValue(analysis.keywords),...arrayValue(analysis.expandedKeywords),...arrayValue(analysis.bilingualTerms)]).slice(0,24);
+      const content=`<section class="results-intro"><h2>과제를 이렇게 해석했어요.</h2><p>검색 기준을 확인한 뒤 전체 Persona 분석을 시작하세요.</p></section><section class="card"><div class="eyebrow">AI Interpretation</div>${rows.map(([label,value])=>`<div class="analysis-field"><b>${esc(label)}</b><span>${esc(arrayValue(value).join(' · ')||textValue(value))}</span></div>`).join('')}<div class="eyebrow" style="margin-top:24px">Search Expansion</div><div class="chips">${keywords.length?keywords.map(value=>`<span class="chip">${esc(value)}</span>`).join(''):'<span class="chip">키워드 없음</span>'}</div>${state.error?errorMessage(state.error):''}</section>`;
+      app.innerHTML=standardScreen(content,'<button class="btn btn-primary btn-full" id="searchButton">인터뷰 후보 선정 시작 <i data-lucide="search"></i></button>');$('#searchButton').onclick=findPersonas;
+    }
+    function evaluationCriteria(){return state.phase==='search'?`<section class="criteria-box"><h3>최종 10명 선정 평가 기준</h3><p>로컬 검색 적합도 35%와 Gemini 평가 65%를 합산합니다.</p><ul class="criteria-list"><li>과제 및 Search Expansion 키워드와의 관련성</li><li>구체적인 경험·생활 맥락과 원본 근거의 풍부함</li><li>숨은 니즈와 불편을 발견할 수 있는 인터뷰 가치</li><li>새로운 콘셉트 발굴 가능성과 후보 구성의 다양성</li></ul></section>`:''}
+    function renderLoading(app){const content=`<section class="card loading-card"><div class="spinner"></div><div class="eyebrow">AI Research In Progress</div><h2 class="display-title">${esc(state.progressText)}</h2><p class="body-copy">화면을 닫지 마세요. 데이터 양과 API 상태에 따라 몇 분 정도 걸릴 수 있습니다.</p><div class="work-progress"><i style="width:${state.progress}%"></i></div><div class="progress-caption"><span>${Math.round(state.progress)}%</span><span>${esc(state.progressCount)}</span></div>${evaluationCriteria()}</section>`;app.innerHTML=standardScreen(content,'<button class="btn btn-outline btn-full" id="cancelButton"><i data-lucide="x"></i> 분석 중지</button>');$('#cancelButton').onclick=()=>{if(!state.controller)return;state.controller.abort();$('#cancelButton').disabled=true;$('#cancelButton').textContent='중지하는 중…'}}
+
+    function localCandidates(){
+      const analysis=state.analysis||{},sources=[analysis.keywords,analysis.expandedKeywords,analysis.bilingualTerms,analysis.importantContexts,analysis.importantBehaviors,analysis.occupations,analysis.personaTypes,analysis.productsAndServices,analysis.lifeContexts,analysis.painPoints,analysis.needs,state.topic,state.description];
+      const terms=unique(sources.flatMap(arrayValue).flatMap(value=>normalize(value).split(/[^\p{L}\p{N}]+/u)).filter(value=>value.length>1)),priorityFields=arrayValue(analysis.priorityFields).map(normalize);
+      const scored=state.rows.map(row=>{let rawScore=0;state.fields.forEach(field=>{const normalizedField=normalize(field);let weight=HIGH_VALUE_FIELDS.some(high=>normalizedField.includes(normalize(high)))?2.2:1;if(priorityFields.some(priority=>priority&&normalizedField.includes(priority)))weight+=2.5;const cellText=normalize(row[field]);if(!cellText)return;rawScore+=terms.reduce((sum,term)=>sum+(cellText.includes(term)?1:0),0)*weight});return {...row,__rawLocalScore:rawScore}}).sort((a,b)=>b.__rawLocalScore-a.__rawLocalScore);
+      const maxScore=scored[0]?.__rawLocalScore||0;
+      return scored.slice(0,Math.min(LOCAL_CANDIDATE_COUNT,scored.length)).map((row,index)=>({...row,localScore:maxScore?Math.round(row.__rawLocalScore/maxScore*100):Math.max(1,100-index)}));
+    }
+    function relevantPersonaFields(){
+      const analysis=state.analysis||{},priority=arrayValue(analysis.priorityFields).map(normalize),searchTerms=unique([analysis.keywords,analysis.expandedKeywords,analysis.bilingualTerms].flatMap(arrayValue).map(normalize));
+      const ranked=state.fields.filter(field=>!field.startsWith('__')).map((field,index)=>{const value=normalize(field);let score=0;if(IDENTITY_FIELDS.some(item=>value===normalize(item)))score+=100;if(HIGH_VALUE_FIELDS.some(item=>value.includes(normalize(item))||normalize(item).includes(value)))score+=80;if(priority.some(item=>item&&(value.includes(item)||item.includes(value))))score+=60;if(searchTerms.some(item=>item&&(value.includes(item)||item.includes(value))))score+=25;return {field,index,score}}).sort((a,b)=>b.score-a.score||a.index-b.index);
+      const selected=ranked.filter(item=>item.score>0).slice(0,14).map(item=>item.field);
+      if(selected.length<8)ranked.filter(item=>!selected.includes(item.field)).slice(0,8-selected.length).forEach(item=>selected.push(item.field));
+      return selected;
+    }
+    function cleanEvaluationItems(payload){
+      const items=Array.isArray(payload)?payload:Array.isArray(payload?.evaluations)?payload.evaluations:[],seen=new Set();
+      return items.filter(item=>{const id=String(item?.personaId??'');if(!id||seen.has(id))return false;seen.add(id);return true});
+    }
+
+    async function findPersonas(){
+      if(state.busy)return;
+      if(!state.rows.length){state.error='Persona Excel 파일을 먼저 업로드해 주세요.';state.screen='upload';render();return}
+      if(!state.analysis){state.error='과제 의미 분석을 먼저 완료해 주세요.';state.screen='topic';render();return}
+      Object.assign(state,{busy:true,phase:'search',progress:8,progressText:`${state.rows.length.toLocaleString()}명의 Persona 전체를 검색하고 있습니다`,progressCount:'1 / 3',error:'',warning:'',controller:new AbortController()});render();
+      try{
+        const candidates=localCandidates(),apiFields=relevantPersonaFields();state.candidates=candidates;state.candidateCount=candidates.length;Object.assign(state,{progress:28,progressText:'인터뷰 후보를 선정하고 있습니다',progressCount:'2 / 3'});render();
+        const client=new GeminiClient(getApiKey()),evaluations=[],failedBatches=[],totalBatches=Math.ceil(candidates.length/BATCH_SIZE);
+        for(let start=0,batchIndex=0;start<candidates.length;start+=BATCH_SIZE,batchIndex+=1){
+          const batch=candidates.slice(start,start+BATCH_SIZE),personaPayload=batch.map(row=>({personaId:personaId(row),personaName:personaName(row),data:Object.fromEntries(apiFields.map(field=>[field,textValue(row[field])]))}));
+          const prompt=`${PROMPTS.evaluate}\n\nPROJECT:\n${JSON.stringify(state.analysis)}\n\nPERSONAS:\n${JSON.stringify(personaPayload)}`;
+          try{evaluations.push(...cleanEvaluationItems(await client.generateContent(prompt,state.controller.signal)))}catch(error){if(error.name==='AbortError')throw error;failedBatches.push(batchIndex+1)}
+          Object.assign(state,{progress:34+(batchIndex+1)/Math.max(1,totalBatches)*58,progressText:'Gemini가 평가하고 있습니다',progressCount:`${Math.min(start+BATCH_SIZE,candidates.length)} / ${candidates.length}`});render();
+        }
+        const candidateMap=new Map(candidates.map(row=>[personaId(row),row]));
+        const evaluated=evaluations.map(evaluation=>{const row=candidateMap.get(String(evaluation?.personaId)),semanticScore=Number(evaluation?.score);return !row||!Number.isFinite(semanticScore)?null:{...row,evaluation,score:Math.max(0,Math.min(100,Math.round(row.localScore*.35+semanticScore*.65)))}}).filter(Boolean).sort((a,b)=>b.score-a.score);
+        if(evaluated.length<FINAL_COUNT)throw Error(`Gemini 평가 결과가 ${evaluated.length}명만 유효합니다. API 연결 상태를 확인한 뒤 다시 시도해 주세요.`);
+        Object.assign(state,{progress:96,progressText:'최종 Persona 10명을 선정하고 있습니다',progressCount:'3 / 3'});render();
+        const finalList=evaluated.slice(0,FINAL_COUNT);
+        if(failedBatches.length)state.warning=`일부 평가 묶음(${failedBatches.join(', ')})은 응답하지 않아 성공한 평가 결과를 기준으로 선정했습니다.`;
+        Object.assign(state,{recommendations:finalList,busy:false,phase:'',progress:100,screen:'results'});render();
+      }catch(error){Object.assign(state,{busy:false,phase:'',error:error.name==='AbortError'?'검색을 취소했습니다.':error.message,screen:'analysis'});render()}
+      finally{state.controller=null}
+    }
+
+    function evaluationEvidence(evaluation){return Array.isArray(evaluation?.evidence)?evaluation.evidence.filter(item=>item&&typeof item==='object'):[]}
+    function resultCard(row,index){
+      const evaluation=row.evaluation||{},evidence=evaluationEvidence(evaluation),coreFeatures=arrayValue(evaluation.coreFeatures).slice(0,4),experiences=arrayValue(evaluation.experiences).slice(0,3),job=textValue(row['직업']??row['직업 페르소나']??row.Occupation),age=textValue(row['나이']??row['연령']??row.Age),gender=textValue(row['성별']??row.Gender),region=textValue(row['시도/주']??row['지역']??row.Location),name=personaName(row);
+      return `<article class="result-card"><span class="rank-badge">${index+1}위</span><span class="score">${Math.round(row.score||0)}<small> / 100</small></span><h3 class="persona-title">${esc(name)}</h3><p class="persona-meta">${esc(job)} · ${esc(age)} · ${esc(gender)} · ${esc(region)}</p><div class="reason-box"><div class="reason-section"><div class="reason-title"><i data-lucide="badge-check"></i>상세 추천 사유</div>${esc(evaluation.reason||'과제와 관련된 경험과 맥락을 원본 Persona 데이터에서 확인할 수 있어 인터뷰 대상자로 추천합니다.')}</div>${experiences.length?`<div class="reason-section"><div class="reason-title"><i data-lucide="route"></i>과제와 연결되는 경험</div>${esc(experiences.join(' · '))}</div>`:''}<div class="reason-section"><div class="reason-title"><i data-lucide="messages-square"></i>기대할 수 있는 인터뷰 관점</div>${esc(evaluation.interviewPerspective||'데이터에서 직접 확인되지 않음')}</div></div>${coreFeatures.length?`<div class="chips">${coreFeatures.map(value=>`<span class="chip">${esc(value)}</span>`).join('')}</div>`:''}${evidence.slice(0,3).map(item=>`<div class="evidence"><b>${esc(item.field||'원본 근거')}</b>${esc(item.evidence||'데이터에서 직접 확인되지 않음')}</div>`).join('')}<button class="btn btn-outline btn-full raw-button" style="margin-top:16px" data-persona-id="${esc(personaId(row))}"><i data-lucide="scan-search"></i> Nemotron Persona 원문 보기</button></article>`;
+    }
+    function renderResults(app){
+      const content=`<section class="results-intro"><h2>이런 분들은 어떠신가요?</h2><p>과제에 의미 있는 인사이트를 줄 가능성이 높은 Persona 10명입니다.</p></section>${state.warning?`<div class="message message-success" style="margin-bottom:10px">${esc(state.warning)}</div>`:''}<section>${state.recommendations.length?state.recommendations.map(resultCard).join(''):errorMessage('추천 결과가 없습니다. 과제 분석 단계에서 다시 시도해 주세요.')}</section>`;
+      app.innerHTML=standardScreen(content,'<button class="btn btn-primary btn-full" id="selectInterviewButton"><i data-lucide="messages-square"></i> 인터뷰 대상 선택</button><button class="btn btn-outline btn-full" id="exportButton"><i data-lucide="download"></i> 현재 결과 Excel 저장</button>');
+      document.querySelectorAll('.raw-button').forEach(button=>button.onclick=()=>openRawPersona(button.dataset.personaId));$('#selectInterviewButton').onclick=()=>{state.screen='select';state.error='';render()};$('#exportButton').onclick=exportResults;
+    }
+
+    function selectedPersonaRow(){return state.recommendations.find(row=>personaId(row)===String(state.selectedPersonaId))||null}
+    function personaPayload(row,includeAll=false){
+      if(!row)return null;
+      const fields=(includeAll?state.fields:relevantPersonaFields()).filter(field=>!isIdField(field));
+      return {name:personaName(row),data:Object.fromEntries(fields.map(field=>[field,textValue(row[field])]))};
+    }
+    function normalizeQuestionGroups(payload){
+      const raw=Array.isArray(payload?.groups)?payload.groups:Array.isArray(payload?.surveys)?payload.surveys:[];
+      return raw.slice(0,3).map((group,index)=>({id:`group-${Date.now()}-${index}`,title:String(group?.title||`질문 영역 ${index+1}`),questions:arrayValue(group?.questions).map(value=>String(value).trim()).filter(Boolean).slice(0,5)})).filter(group=>group.questions.length);
+    }
+    function allQuestionItems(){return state.questionGroups.flatMap(group=>group.questions.map((text,index)=>({id:`${group.id}-${index}`,text,groupId:group.id})))}
+    function normalizeInterviewResult(payload,questions){
+      const pairs=Array.isArray(payload?.qaPairs)?payload.qaPairs:[];
+      return {summary:String(payload?.summary||'인터뷰 요약이 생성되지 않았습니다.'),qaPairs:questions.map((question,index)=>({q:String(pairs[index]?.q||question),a:String(pairs[index]?.a||'답변이 생성되지 않았습니다.')})),keyInsights:arrayValue(payload?.keyInsights).flatMap(value=>String(value).split(/\n+/)).map(value=>value.trim()).filter(Boolean).slice(0,8)};
+    }
+    function activeInterview(){return state.interviews.find(item=>item.id===state.activeInterviewId)||state.interviews.at(-1)||null}
+
+    function renderPersonaSelect(app){
+      if(state.busy){renderLoading(app);return}
+      const cards=state.recommendations.map((row,index)=>{const id=personaId(row),selected=id===String(state.selectedPersonaId),count=state.interviews.filter(item=>item.personaId===id).length,job=textValue(row['직업']??row['직업 페르소나']??row.Occupation),age=textValue(row['나이']??row['연령']??row.Age),region=textValue(row['시도/주']??row['지역']??row.Location),meta=[job,age,region].filter(value=>value&&value!=='데이터에서 직접 확인되지 않음').join(' · ')||'세부 인적 정보는 원본 데이터에서 확인할 수 있습니다.';return `<button class="select-card ${selected?'selected':''}" data-select-persona="${esc(id)}"><h3>${index+1}. ${esc(personaName(row))}</h3><p>${esc(meta)}</p><p class="select-card-feature"><b>핵심 특징</b>${esc(personaFeature(row))}</p><div class="select-card-meta"><span class="status-chip">추천 점수 ${Math.round(row.score||0)}</span>${count?`<span class="status-chip">인터뷰 ${count}회 완료</span>`:''}</div></button>`}).join('');
+      const content=`<section><h2 class="section-heading">인터뷰할 Persona를<br>선택해 주세요.</h2><p class="section-lead">추천된 실제 Nemotron Persona 중 한 명을 선택하면 맞춤 질문 15개를 생성합니다.</p></section>${state.error?errorMessage(state.error):''}<section class="select-list">${cards}</section>`;
+      app.innerHTML=standardScreen(content,`<button class="btn btn-primary btn-full" id="generateQuestionsButton" ${state.selectedPersonaId?'':'disabled'}><i data-lucide="list-checks"></i> 선택 Persona 질문 만들기</button>`);
+      document.querySelectorAll('[data-select-persona]').forEach(button=>button.onclick=()=>{const id=button.dataset.selectPersona;if(id!==String(state.selectedPersonaId))Object.assign(state,{selectedPersonaId:id,questionGroups:[],selectedQuestionIds:[],activeInterviewId:''});render({preserveScroll:true})});
+      $('#generateQuestionsButton').onclick=generateInterviewQuestions;
+    }
+
+    async function generateInterviewQuestions(){
+      const row=selectedPersonaRow();if(!row){showToast('인터뷰할 Persona를 선택해 주세요.');return}
+      Object.assign(state,{busy:true,phase:'questions',progress:24,progressText:`${personaName(row)}님의 인터뷰 질문을 설계하고 있습니다`,progressCount:'1 / 2',screen:'questions',error:'',controller:new AbortController()});render();
+      try{
+        const response=await new GeminiClient(getApiKey()).generateContent(PROMPTS.questions(state.topic,state.analysis,personaPayload(row,true)),state.controller.signal),groups=normalizeQuestionGroups(response);
+        if(groups.length!==3||groups.reduce((sum,group)=>sum+group.questions.length,0)<12)throw Error('인터뷰 질문 구성이 불완전합니다. 다시 생성해 주세요.');
+        Object.assign(state,{questionGroups:groups,selectedQuestionIds:[],busy:false,phase:'',progress:100,screen:'questions'});render();
+      }catch(error){Object.assign(state,{busy:false,phase:'',error:error.name==='AbortError'?'질문 생성을 취소했습니다.':error.message,screen:'select'});render()}
+      finally{state.controller=null}
+    }
+
+    function toggleQuestion(id){state.selectedQuestionIds=state.selectedQuestionIds.includes(id)?state.selectedQuestionIds.filter(value=>value!==id):[...state.selectedQuestionIds,id];render({preserveScroll:true})}
+    function addManualQuestions(){
+      const input=$('#manualQuestionInput'),questions=(input?.value||'').split(/\n+/).map(value=>value.trim()).filter(Boolean).slice(0,10);if(!questions.length){showToast('추가할 질문을 입력해 주세요.');return}
+      const group={id:`manual-${Date.now()}`,title:'사용자 추가 질문',questions};state.questionGroups=[...state.questionGroups,group];state.selectedQuestionIds=[...state.selectedQuestionIds,...questions.map((_,index)=>`${group.id}-${index}`)];render({preserveScroll:true});
+    }
+    function renderQuestions(app){
+      if(state.busy){renderLoading(app);return}
+      const row=selectedPersonaRow();if(!row){app.innerHTML=standardScreen(errorMessage('선택한 Persona를 찾을 수 없습니다.'),'');return}
+      const groups=state.questionGroups.map(group=>`<section class="question-group"><h3>${esc(group.title)}</h3><div class="question-list">${group.questions.map((question,index)=>{const id=`${group.id}-${index}`,selected=state.selectedQuestionIds.includes(id);return `<button class="question-card ${selected?'selected':''}" data-question-id="${esc(id)}"><span class="check-dot">${selected?'✓':''}</span><span>${esc(question)}</span></button>`}).join('')}</div></section>`).join('');
+      const content=`<section><h2 class="section-heading">${esc(personaName(row))}님에게<br>무엇을 물어볼까요?</h2><p class="section-lead">질문을 선택하거나 직접 추가해 인터뷰를 구성해 주세요.</p></section><div class="question-toolbar"><button class="btn btn-outline" id="selectAllButton">전체 선택</button><button class="btn btn-outline" id="clearQuestionsButton">선택 해제</button></div>${groups}<section class="manual-box"><div class="eyebrow">직접 질문 추가</div><textarea class="text-area compact" id="manualQuestionInput" placeholder="질문을 줄바꿈으로 구분해 입력해 주세요."></textarea><button class="btn btn-outline btn-full" id="addQuestionButton" style="margin-top:10px"><i data-lucide="plus"></i> 질문 추가</button></section>${state.error?errorMessage(state.error):''}`;
+      app.innerHTML=standardScreen(content,`<button class="btn btn-primary btn-full" id="startInterviewButton" ${state.selectedQuestionIds.length?'':'disabled'}><i data-lucide="message-circle-more"></i> 선택한 ${state.selectedQuestionIds.length}개 질문으로 인터뷰</button>`);
+      document.querySelectorAll('[data-question-id]').forEach(button=>button.onclick=()=>toggleQuestion(button.dataset.questionId));$('#selectAllButton').onclick=()=>{state.selectedQuestionIds=allQuestionItems().map(item=>item.id);render({preserveScroll:true})};$('#clearQuestionsButton').onclick=()=>{state.selectedQuestionIds=[];render({preserveScroll:true})};$('#addQuestionButton').onclick=addManualQuestions;$('#startInterviewButton').onclick=performInterview;
+    }
+
+    async function performInterview(){
+      const row=selectedPersonaRow(),questions=allQuestionItems().filter(item=>state.selectedQuestionIds.includes(item.id)).map(item=>item.text);if(!row||!questions.length){showToast('Persona와 질문을 확인해 주세요.');return}
+      Object.assign(state,{busy:true,phase:'interview',progress:18,progressText:`${personaName(row)}님의 가상 인터뷰를 진행하고 있습니다`,progressCount:'1 / 3',screen:'interview',error:'',controller:new AbortController()});render();
+      try{
+        const response=await new GeminiClient(getApiKey()).generateContent(PROMPTS.interview(state.topic,state.analysis,personaPayload(row,true),questions),state.controller.signal),result=normalizeInterviewResult(response,questions),id=`interview-${Date.now()}`;
+        const session={id,personaId:personaId(row),personaName:personaName(row),questions:[...questions],result,createdAt:new Date().toISOString()};Object.assign(state,{interviews:[...state.interviews,session],activeInterviewId:id,busy:false,phase:'',progress:100,screen:'interview'});render();
+      }catch(error){Object.assign(state,{busy:false,phase:'',error:error.name==='AbortError'?'인터뷰를 취소했습니다.':error.message,screen:'questions'});render()}
+      finally{state.controller=null}
+    }
+
+    async function askFollowUp(){
+      const input=$('#followupInput'),question=input?.value.trim()||'',session=activeInterview(),row=state.recommendations.find(item=>personaId(item)===session?.personaId);if(!question){showToast('추가 질문을 입력해 주세요.');return}if(!session||!row)return;
+      Object.assign(state,{busy:true,phase:'followup',progress:32,progressText:'이전 답변을 바탕으로 추가 질문에 답하고 있습니다',progressCount:'1 / 2',screen:'interview',error:'',controller:new AbortController()});render();
+      try{
+        const response=await new GeminiClient(getApiKey()).generateContent(PROMPTS.followUp(state.topic,personaPayload(row,true),session.result,question),state.controller.signal),pair={q:String(response?.q||question),a:String(response?.a||'답변이 생성되지 않았습니다.')};
+        state.interviews=state.interviews.map(item=>item.id===session.id?{...item,result:{...item.result,qaPairs:[...item.result.qaPairs,pair]}}:item);Object.assign(state,{busy:false,phase:'',progress:100,screen:'interview'});render();
+      }catch(error){Object.assign(state,{busy:false,phase:'',error:error.name==='AbortError'?'추가 질문을 취소했습니다.':error.message,screen:'interview'});render()}
+      finally{state.controller=null}
+    }
+
+    function renderInterview(app){
+      if(state.busy){renderLoading(app);return}
+      const session=activeInterview();if(!session){app.innerHTML=standardScreen(errorMessage('완료된 인터뷰가 없습니다. 질문을 선택해 인터뷰를 시작해 주세요.'),'');return}
+      const sessions=state.interviews.map((item,index)=>`<button class="${item.id===session.id?'active':''}" data-session-id="${esc(item.id)}">${index+1}회 · ${esc(item.personaName)}</button>`).join(''),qa=session.result.qaPairs.map((pair,index)=>`<article class="qa-card"><span class="qa-label">Question ${index+1}</span><p class="qa-question">${esc(pair.q)}</p><span class="qa-label">Answer</span><p class="qa-answer">${esc(pair.a)}</p></article>`).join(''),insights=arrayValue(session.result.keyInsights);
+      const content=`<section class="interview-hero"><h2>${esc(session.personaName)}님 인터뷰</h2><p>${esc(session.result.summary)}</p></section><nav class="session-nav" aria-label="인터뷰 회차">${sessions}</nav>${state.error?errorMessage(state.error):''}<section class="interview-list">${qa}</section><section class="manual-box"><div class="eyebrow">인터뷰 추가 질문</div><p class="body-copy">현재 회차의 답변을 바탕으로 더 깊이 질문할 수 있습니다.</p><div class="followup-row"><input class="text-input" id="followupInput" placeholder="추가 질문 입력"><button class="btn btn-primary" id="followupButton" aria-label="추가 질문 보내기"><i data-lucide="send"></i></button></div></section><section class="insight-box"><b>Key Insights</b><br>${esc(insights.join('\n')||'핵심 인사이트가 생성되지 않았습니다.')}</section><div class="interview-actions"><button class="btn btn-primary btn-full" id="samePersonaButton"><i data-lucide="refresh-cw"></i> 같은 Persona 추가 인터뷰</button><button class="btn btn-outline btn-full" id="otherPersonaButton"><i data-lucide="users"></i> 다른 Persona 인터뷰</button><button class="btn btn-outline btn-full" id="exportInterviewButton"><i data-lucide="download"></i> 전체 결과 Excel 저장</button></div>`;
+      app.innerHTML=standardScreen(content,'');document.querySelectorAll('[data-session-id]').forEach(button=>button.onclick=()=>{state.activeInterviewId=button.dataset.sessionId;render({preserveScroll:true})});$('#followupButton').onclick=askFollowUp;$('#followupInput').onkeydown=event=>{if(event.key==='Enter')askFollowUp()};$('#samePersonaButton').onclick=()=>{Object.assign(state,{questionGroups:[],selectedQuestionIds:[],activeInterviewId:''});generateInterviewQuestions()};$('#otherPersonaButton').onclick=()=>{Object.assign(state,{screen:'select',selectedPersonaId:'',questionGroups:[],selectedQuestionIds:[],activeInterviewId:'',error:''});render()};$('#exportInterviewButton').onclick=exportResults;
+    }
+    function openRawPersona(id){
+      const row=state.rows.find(item=>personaId(item)===String(id));if(!row)return;
+      const modal=$('#modal'),visibleFields=state.fields.filter(field=>!isIdField(field));modal.className='modal-backdrop';modal.hidden=false;modal.innerHTML=`<section class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="rawTitle"><div class="modal-head"><div><div class="eyebrow" style="margin-bottom:3px">Original Persona</div><h2 id="rawTitle">${esc(personaName(row))}</h2></div><button class="icon-button" id="closeModal" aria-label="원본 데이터 닫기"><i data-lucide="x"></i></button></div>${visibleFields.map(field=>`<div class="raw-field"><b>${esc(field)}</b><span>${esc(textValue(row[field]))}</span></div>`).join('')}</section>`;
+      $('#closeModal').onclick=closeModal;modal.onclick=event=>{if(event.target===modal)closeModal()};document.addEventListener('keydown',closeModalOnEscape);renderIcons();
+    }
+    function closeModalOnEscape(event){if(event.key==='Escape')closeModal()}
+    function closeModal(){const modal=$('#modal');modal.hidden=true;modal.className='';modal.innerHTML='';document.removeEventListener('keydown',closeModalOnEscape)}
+
+    const safeSheetName=name=>name.replace(/[\\\/?*\[\]:]/g,' ').slice(0,31)||'Sheet';
+    function exportResults(){
+      if(!state.recommendations.length){showToast('저장할 추천 결과가 없습니다.');return}if(typeof XLSX==='undefined'){showToast('Excel 저장 모듈을 불러오지 못했습니다.');return}
+      try{
+        const workbook=XLSX.utils.book_new(),summary=[['Nemotron Persona Recommendation',''],['항목','내용'],['과제명',state.topic],['추가 설명',state.description],['분석 날짜',new Date().toLocaleString('ko-KR')],['원본 Persona 파일명',state.fileName],['원본 Sheet',state.sheetName],['전체 Persona 수',state.rows.length],['Gemini 모델',MODEL_NAME],['1차 후보 수',state.candidateCount||state.candidates.length],['최종 추천 수',state.recommendations.length],['과제 핵심 목적',state.analysis?.researchIntent||''],['주요 탐색 영역',arrayValue(state.analysis?.importantContexts).join(' | ')],['주요 행동 특성',arrayValue(state.analysis?.importantBehaviors).join(' | ')],['관련 사용자 유형',arrayValue(state.analysis?.personaTypes).join(' | ')],['잠재 Needs',arrayValue(state.analysis?.needs).join(' | ')],['Search Expansion',unique([state.analysis?.keywords,state.analysis?.expandedKeywords,state.analysis?.bilingualTerms].flatMap(arrayValue)).join(' | ')]];
+        const recommended=state.recommendations.map((row,index)=>({추천순위:index+1,이름:personaName(row),성별:textValue(row['성별']??row.Gender),나이:textValue(row['나이']??row['연령']??row.Age),직업:textValue(row['직업']??row['직업 페르소나']??row.Occupation),지역:textValue(row['시도/주']??row['지역']??row.Location),인터뷰적합도:Math.round(row.score||0),핵심특징:arrayValue(row.evaluation?.coreFeatures).join(' | '),관련경험:arrayValue(row.evaluation?.experiences).join(' | '),상세추천사유:row.evaluation?.reason||'',기대인터뷰관점:row.evaluation?.interviewPerspective||'',주요근거:evaluationEvidence(row.evaluation).map(value=>`${value.field||'원본 근거'}: ${value.evidence||''}`).join(' | ')})),details=state.recommendations.map(row=>Object.fromEntries(state.fields.map(field=>[field,row[field]])));
+        const interviewQuestions=state.interviews.flatMap((session,sessionIndex)=>session.questions.map((question,index)=>({인터뷰회차:sessionIndex+1,Persona이름:session.personaName,질문순서:index+1,인터뷰질문:question}))),interviewResults=state.interviews.flatMap((session,sessionIndex)=>session.result.qaPairs.map((pair,index)=>({인터뷰회차:sessionIndex+1,Persona이름:session.personaName,질문구분:index<session.questions.length?'선택 질문':'추가 질문',질문순서:index+1,질문:pair.q,답변:pair.a,인터뷰요약:session.result.summary,핵심인사이트:arrayValue(session.result.keyInsights).join(' | '),진행일시:new Date(session.createdAt).toLocaleString('ko-KR')})));
+        XLSX.utils.book_append_sheet(workbook,XLSX.utils.aoa_to_sheet(summary),safeSheetName('Project Summary'));XLSX.utils.book_append_sheet(workbook,XLSX.utils.json_to_sheet(recommended),safeSheetName('Recommended Personas'));XLSX.utils.book_append_sheet(workbook,XLSX.utils.json_to_sheet(details),safeSheetName('Persona Details'));XLSX.utils.book_append_sheet(workbook,XLSX.utils.json_to_sheet(interviewQuestions.length?interviewQuestions:[{안내:'아직 진행된 인터뷰가 없습니다.'}]),safeSheetName('Interview Questions'));XLSX.utils.book_append_sheet(workbook,XLSX.utils.json_to_sheet(interviewResults.length?interviewResults:[{안내:'아직 진행된 인터뷰가 없습니다.'}]),safeSheetName('Interview Results'));
+        const safeTopic=state.topic.replace(/[\\/:*?"<>|]/g,' ').trim().replace(/\s+/g,'_').slice(0,42)||'project',fileName=`${safeTopic}_Persona리서치_${new Date().toISOString().slice(0,10)}.xlsx`;XLSX.writeFile(workbook,fileName,{compression:true});state.screen='done';render();
+      }catch(error){showToast(`Excel 저장 중 문제가 발생했습니다: ${error.message}`,4200)}
+    }
+    function renderDone(app){app.innerHTML=`<div class="screen fade-in">${headerTemplate()}<main class="done-screen"><div class="done-mark"><i data-lucide="check"></i></div><h1>리서치 결과를 저장했습니다.</h1><p>추천 Persona 10명과 원본 데이터, ${state.interviews.length.toLocaleString()}회의 인터뷰 질문·답변을 하나의 Excel 파일에 담았습니다.</p></main><div class="bottom-bar"><div class="bottom-stack"><button class="btn btn-primary btn-full" id="againButton">새로운 과제 검색 <i data-lucide="refresh-cw"></i></button></div></div></div>`;$('#againButton').onclick=resetProject}
+    function resetProject(){Object.assign(state,{projectId:'',pendingProject:null,topic:'',description:'',analysis:null,recommendations:[],candidates:[],candidateCount:0,selectedPersonaId:'',questionGroups:[],selectedQuestionIds:[],interviews:[],activeInterviewId:'',error:'',warning:'',busy:false,phase:'',screen:state.rows.length?'topic':'upload'});render()}
+
+    window.addEventListener('unhandledrejection',event=>{if(event.reason?.name!=='AbortError')console.error('Unhandled promise rejection:',event.reason)});
+    window.addEventListener('error',event=>console.error('Application error:',event.error||event.message));
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistCurrentProject().catch(()=>{})});
+    window.addEventListener('pagehide',()=>{persistCurrentProject().catch(()=>{})});
+    render();refreshProjectList().then(()=>{if(state.screen==='upload')render({preserveScroll:true})}).catch(error=>console.error('Project list load failed:',error));
+  })();
   </script>
 </body>
 </html>
